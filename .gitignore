@@ -1,0 +1,7 @@
+projects.db
+projects.db-shm
+projects.db-wal
+system_changes.db
+system_changes.db-shm
+system_changes.db-wal
+__pycache__/

@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "owner": "japonamat",
+  "language": {
+    "default": "ru",
+    "strict_default": true,
+    "switch_only_if_user_requests": true,
+    "avoid_mixed_language": true
+  },
+  "style": {
+    "concise": true,
+    "practical": true,
+    "action_oriented": true
+  },
+  "sources": {
+    "primary_control_plane": "~/ai",
+    "workflow_file": "~/ai/WORKFLOW.md",
+    "project_registry": "~/ai/PROJECT_CONTEXTS.md",
+    "project_index_db": "~/ai/projects.db",
+    "actions_log": "~/ai/actions.log",
+    "recovery_dir": "~/ai/recovery",
+    "pet_ideas_dir": "~/pet"
+  },
+  "context_loading": {
+    "do_not_load_all_project_contexts_by_default": true,
+    "check_registry_first": true,
+    "load_only_relevant_project_context": true,
+    "ask_if_project_context_is_ambiguous": true,
+    "prefer_minimal_sufficient_context": true
+  },
+  "project_policy": {
+    "project_definition": {
+      "requires_git": true,
+      "requires_remote_owner": "cmdrJaponamat"
+    },
+    "recovery_file": {
+      "required_on_project_creation": true,
+      "path": "project-root/.ai-recovery.md",
+      "format": "markdown",
+      "required_sections": [
+        "project_path",
+        "purpose",
+        "current_state",
+        "key_commands",
+        "next_steps"
+      ]
+    },
+    "registry_update_required": true,
+    "db_is_index_only": true,
+    "markdown_is_source_of_project_context": true
+  },
+  "git_policy": {
+    "commit_discrete_completed_changes": true,
+    "verify_changes_before_commit": true,
+    "do_not_bundle_unrelated_changes": true,
+    "ask_before_git_init_if_missing": true,
+    "do_not_init_git_silently": true
+  },
+  "system_work": {
+    "enabled": true,
+    "description": "Любая работа вне обычного проектного git-репозитория считается system work и должна оставлять recovery trail в ~/ai.",
+    "always_log_to_actions_log": true,
+    "nontrivial_changes_require_recovery_note": true,
+    "preferred_control_plane": "~/ai",
+    "required_fields": [
+      "what_changed",
+      "why_changed",
+      "verification_status",
+      "rollback_strategy_or_note",
+      "relogin_or_reboot_requirement"
+    ],
+    "scopes": [
+      "~/.config",
+      "systemd_user_services",
+      "shell_config",
+      "package_management",
+      "audio_video_input_config",
+      "network_config",
+      "autostart",
+      "desktop_environment_or_compositor",
+      "~/.local/bin",
+      "machine_bootstrap_and_migration"
+    ],
+    "rollback_policy": {
+      "must_record_rollback_or_explicitly_state_manual_only": true,
+      "git_if_available": true,
+      "manual_or_checklist_if_not_git_managed": true
+    }
+  },
+  "safety": {
+    "no_destructive_actions_without_explicit_confirmation": true,
+    "no_mass_home_scan_without_need": true,
+    "prefer_registered_context_over_guessing": true
+  },
+  "pet_project_ideas": {
+    "record_worthy_ideas_in_pet": true,
+    "required_fields": [
+      "goal",
+      "why_interesting",
+      "possible_stack",
+      "minimal_mvp"
+    ]
+  },
+  "future_plans": {
+    "keep_environment_migration_in_plans": true,
+    "dotfiles_is_key_migration_project": true,
+    "reduce_hardware_dependency": true,
+    "move_toward_home_relative_paths": true
+  }
+}
