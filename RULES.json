@@ -53,6 +53,7 @@
   },
   "git_policy": {
     "commit_discrete_completed_changes": true,
+    "push_after_completed_step_if_repo_exists": true,
     "verify_changes_before_commit": true,
     "do_not_bundle_unrelated_changes": true,
     "ask_before_git_init_if_missing": true,

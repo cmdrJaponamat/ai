@@ -8,6 +8,7 @@ Scope: local system work, config changes, recovery context
 
 - Log all system-level actions into `~/ai/`.
 - Commit every change under `~/.config` immediately after each discrete action.
+- If a repository already exists, every completed discrete step should end with commit and push unless the user explicitly says not to push or the step is intentionally left incomplete.
 - Create or update a recovery/context file in `~/ai/` after every completed task or system change.
 - Если в любом контексте появляется стоящая идея для пет-проекта, ее нужно обязательно записать в отдельный файл в `~/pet/`, независимо от текущей задачи.
 
@@ -33,7 +34,8 @@ Example:
 - After each discrete `.config` change:
   1. verify the file content
   2. commit the change
-  3. update recovery notes in `~/ai/`
+  3. push the change
+  4. update recovery notes in `~/ai/`
 - Do not batch unrelated `.config` changes into one commit.
 
 ## Recovery File Rules
@@ -70,9 +72,10 @@ Example:
 Before considering a task complete:
 1. log the action in `~/ai/actions.log`
 2. if `~/.config` changed, commit it
-3. update or create a recovery file in `~/ai/`
-4. record verification result
-5. if the task changed the system state, mark or refresh system inventory
+3. if a repository exists for the work area, push the completed step
+4. update or create a recovery file in `~/ai/`
+5. record verification result
+6. if the task changed the system state, mark or refresh system inventory
 
 ## Notes
 
