@@ -1,12 +1,15 @@
 # Инвентарь Системы
 
-Дата генерации: 2026-03-20T20:55:44+00:00
+Дата генерации: 2026-03-20T21:12:03+00:00
 
 ## Свежесть Инвентаря
 
 - package_versions: status=fresh, age_hours=0.0, ttl_hours=72
 - user_services: status=fresh, age_hours=0.0, ttl_hours=24
 - tool_paths: status=fresh, age_hours=0.0, ttl_hours=72
+- invalidation_active: False
+- invalidation_reason: None
+- invalidated_at: None
 
 ## Система
 

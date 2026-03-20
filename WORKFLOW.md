@@ -14,6 +14,7 @@ Scope: local system work, config changes, recovery context
 ## Logging Rules
 
 - Keep a plain chronological log in `~/ai/actions.log`.
+- For system changes, prefer using `ai-system-change` so the action is logged and the system inventory is marked stale in one step.
 - Each log entry should include:
   - timestamp
   - what was changed
@@ -71,6 +72,7 @@ Before considering a task complete:
 2. if `~/.config` changed, commit it
 3. update or create a recovery file in `~/ai/`
 4. record verification result
+5. if the task changed the system state, mark or refresh system inventory
 
 ## Notes
 

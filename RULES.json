@@ -64,12 +64,14 @@
     "system_inventory_is_primary_for_package_checks": true,
     "avoid_rechecking_packages_if_inventory_is_fresh": true,
     "refresh_inventory_after_system_changes": true,
+    "mark_inventory_stale_on_system_changes": true,
     "inventory_ttl_hours": {
       "package_versions": 72,
       "user_services": 24,
       "tool_paths": 72
     },
     "recheck_when": [
+      "inventory_has_active_invalidation_flag",
       "inventory_section_is_stale",
       "user_explicitly_requests_verification",
       "task_is_high_risk_or_version_sensitive",
