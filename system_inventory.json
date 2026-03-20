@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-03-20T20:55:44+00:00",
+  "freshness_policy": {
+    "package_versions_hours": 72,
+    "user_services_hours": 24,
+    "tool_paths_hours": 72
+  },
+  "freshness_state": {
+    "package_versions": {
+      "age_hours": 0.0,
+      "ttl_hours": 72,
+      "status": "fresh"
+    },
+    "user_services": {
+      "age_hours": 0.0,
+      "ttl_hours": 24,
+      "status": "fresh"
+    },
+    "tool_paths": {
+      "age_hours": 0.0,
+      "ttl_hours": 72,
+      "status": "fresh"
+    }
+  },
+  "system": {
+    "hostname": "arch",
+    "kernel": "6.18.18-1-lts",
+    "architecture": "x86_64",
+    "os_release": {
+      "NAME": "Arch Linux",
+      "PRETTY_NAME": "Arch Linux",
+      "ID": "arch",
+      "BUILD_ID": "rolling",
+      "ANSI_COLOR": "38;2;23;147;209",
+      "HOME_URL": "https://archlinux.org/",
+      "DOCUMENTATION_URL": "https://wiki.archlinux.org/",
+      "SUPPORT_URL": "https://bbs.archlinux.org/",
+      "BUG_REPORT_URL": "https://gitlab.archlinux.org/groups/archlinux/-/issues",
+      "PRIVACY_POLICY_URL": "https://terms.archlinux.org/docs/privacy-policy/",
+      "LOGO": "archlinux-logo"
+    },
+    "shell": "/usr/bin/bash",
+    "cwd_default": "/home/japonamat",
+    "session_type": "wayland",
+    "current_desktop": "niri",
+    "wayland_display": "wayland-1",
+    "package_manager": "pacman"
+  },
+  "tools": {
+    "pacman": {
+      "name": "pacman",
+      "installed": true,
+      "path": "/usr/bin/pacman",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "systemctl": {
+      "name": "systemctl",
+      "installed": true,
+      "path": "/usr/bin/systemctl",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "python3": {
+      "name": "python3",
+      "installed": true,
+      "path": "/usr/bin/python3",
+      "version": "Python 3.14.3",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "codex": {
+      "name": "codex",
+      "installed": true,
+      "path": "/usr/bin/codex",
+      "version": "codex-cli 0.116.0",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "niri": {
+      "name": "niri",
+      "installed": true,
+      "path": "/usr/bin/niri",
+      "version": "niri 25.11 (b35bcae)",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "alacritty": {
+      "name": "alacritty",
+      "installed": true,
+      "path": "/usr/bin/alacritty",
+      "version": "alacritty 0.16.1 (42f49eeb)",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "rofi": {
+      "name": "rofi",
+      "installed": true,
+      "path": "/usr/bin/rofi",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "git": {
+      "name": "git",
+      "installed": true,
+      "path": "/usr/bin/git",
+      "version": "git version 2.53.0",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "node": {
+      "name": "node",
+      "installed": true,
+      "path": "/usr/bin/node",
+      "version": "v25.8.1",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "npm": {
+      "name": "npm",
+      "installed": true,
+      "path": "/usr/bin/npm",
+      "version": "11.11.1",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "pnpm": {
+      "name": "pnpm",
+      "installed": false,
+      "path": null,
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "yarn": {
+      "name": "yarn",
+      "installed": false,
+      "path": null,
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "cargo": {
+      "name": "cargo",
+      "installed": true,
+      "path": "/usr/bin/cargo",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "rustc": {
+      "name": "rustc",
+      "installed": true,
+      "path": "/usr/bin/rustc",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "go": {
+      "name": "go",
+      "installed": true,
+      "path": "/usr/bin/go",
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "cmake": {
+      "name": "cmake",
+      "installed": true,
+      "path": "/usr/bin/cmake",
+      "version": "cmake version 4.2.3",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "gcc": {
+      "name": "gcc",
+      "installed": true,
+      "path": "/usr/bin/gcc",
+      "version": "gcc (GCC) 15.2.1 20260209",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "clang": {
+      "name": "clang",
+      "installed": true,
+      "path": "/usr/bin/clang",
+      "version": "clang version 22.1.1",
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "docker": {
+      "name": "docker",
+      "installed": false,
+      "path": null,
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    },
+    "podman": {
+      "name": "podman",
+      "installed": false,
+      "path": null,
+      "version": null,
+      "checked_at": "2026-03-20T20:55:47+00:00"
+    }
+  },
+  "packages": {
+    "alacritty": {
+      "installed": true,
+      "version": "0.16.1-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "niri": {
+      "installed": true,
+      "version": "25.11-2",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "rofi": {
+      "installed": true,
+      "version": "1.7.8.wayland1.r23.g3bec3fac-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "git": {
+      "installed": true,
+      "version": "2.53.0-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "python": {
+      "installed": true,
+      "version": "3.14.3-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "nodejs": {
+      "installed": true,
+      "version": "25.8.1-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "npm": {
+      "installed": true,
+      "version": "11.11.1-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "rust": {
+      "installed": true,
+      "version": "1.29.0-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "go": {
+      "installed": true,
+      "version": "2:1.26.1-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "cmake": {
+      "installed": true,
+      "version": "4.2.3-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "gcc": {
+      "installed": true,
+      "version": "15.2.1+r604+g0b99615a8aef-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    },
+    "clang": {
+      "installed": true,
+      "version": "22.1.1-1",
+      "checked_at": "2026-03-20T20:55:44+00:00"
+    }
+  },
+  "user_services": {
+    "niri.service": {
+      "unit": "niri.service",
+      "load_state": "loaded",
+      "active_state": "active",
+      "sub_state": "running",
+      "unit_file_state": "static"
+    },
+    "pipewire.service": {
+      "unit": "pipewire.service",
+      "load_state": "loaded",
+      "active_state": "active",
+      "sub_state": "running",
+      "unit_file_state": "enabled"
+    },
+    "pipewire-pulse.service": {
+      "unit": "pipewire-pulse.service",
+      "load_state": "loaded",
+      "active_state": "active",
+      "sub_state": "running",
+      "unit_file_state": "enabled"
+    },
+    "wireplumber.service": {
+      "unit": "wireplumber.service",
+      "load_state": "loaded",
+      "active_state": "active",
+      "sub_state": "running",
+      "unit_file_state": "enabled"
+    },
+    "dbus-broker.service": {
+      "unit": "dbus-broker.service",
+      "load_state": "loaded",
+      "active_state": "active",
+      "sub_state": "running",
+      "unit_file_state": "disabled"
+    }
+  }
+}

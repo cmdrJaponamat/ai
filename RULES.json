@@ -17,6 +17,8 @@
     "workflow_file": "~/ai/WORKFLOW.md",
     "project_registry": "~/ai/PROJECT_CONTEXTS.md",
     "project_index_db": "~/ai/projects.db",
+    "system_inventory_json": "~/ai/system_inventory.json",
+    "system_inventory_human": "~/ai/system_inventory_human.md",
     "actions_log": "~/ai/actions.log",
     "recovery_dir": "~/ai/recovery",
     "pet_ideas_dir": "~/pet"
@@ -59,6 +61,20 @@
   "system_work": {
     "enabled": true,
     "description": "Любая работа вне обычного проектного git-репозитория считается system work и должна оставлять recovery trail в ~/ai.",
+    "system_inventory_is_primary_for_package_checks": true,
+    "avoid_rechecking_packages_if_inventory_is_fresh": true,
+    "refresh_inventory_after_system_changes": true,
+    "inventory_ttl_hours": {
+      "package_versions": 72,
+      "user_services": 24,
+      "tool_paths": 72
+    },
+    "recheck_when": [
+      "inventory_section_is_stale",
+      "user_explicitly_requests_verification",
+      "task_is_high_risk_or_version_sensitive",
+      "there_are_signs_environment_changed_since_last_inventory"
+    ],
     "always_log_to_actions_log": true,
     "nontrivial_changes_require_recovery_note": true,
     "preferred_control_plane": "~/ai",
