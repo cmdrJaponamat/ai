@@ -18,6 +18,7 @@ Rules:
 - `db` | path: `/home/japonamat/study/JS/DB/db` | recovery: `/home/japonamat/study/JS/DB/db/.ai-recovery.md`
 - `amur` | path: `/home/japonamat/study/c++/amur` | recovery: `/home/japonamat/study/c++/amur/.ai-recovery.md`
 - `new-amur-test` | path: `/home/japonamat/study/c++/new-amur-test` | recovery: `/home/japonamat/study/c++/new-amur-test/.ai-recovery.md`
+- `machine_learning` | path: `/home/japonamat/study/fifth/Machin_learning` | recovery: `/home/japonamat/study/fifth/Machin_learning/.ai-recovery.md`
 - `ТРПО` | path: `/home/japonamat/study/fifth/ТРПО` | recovery: `/home/japonamat/study/fifth/ТРПО/.ai-recovery.md`
 - `DB` | path: `/home/japonamat/study/forthyear/DB` | recovery: `/home/japonamat/study/forthyear/DB/.ai-recovery.md`
 - `obsidian-career-path` | path: `/home/japonamat/study/obsidian-career-path` | recovery: `/home/japonamat/study/obsidian-career-path/.ai-recovery.md`
