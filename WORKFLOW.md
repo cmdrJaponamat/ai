@@ -54,6 +54,10 @@ Example:
   - `~/ai/PROJECT_CONTEXTS.md`
   - `~/ai/projects.db`
 - Для обновления `projects.db` предпочитать скрипт регистрации проекта, а не ручной SQL.
+- Использование:
+  ```bash
+  ~/ai/projects/register_project.sh <name> <project_path> <recovery_file> [remote_url]
+  ```
 
 ## Coding Rules
 

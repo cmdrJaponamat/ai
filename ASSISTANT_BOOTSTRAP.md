@@ -33,6 +33,10 @@
 - Сразу добавляй ссылку на этот recovery-файл в `~/ai/PROJECT_CONTEXTS.md`.
 - При создании нового проекта сразу обновляй и `~/ai/projects.db` как индексный реестр.
 - Для этого предпочитай использовать локальный скрипт регистрации проекта, если он доступен.
+- Использование:
+  ```bash
+  ~/ai/projects/register_project.sh <name> <project_path> <recovery_file> [remote_url]
+  ```
 - Для каждого проекта должен быть один явный source of truth:
   - по умолчанию это `project-root/.ai-recovery.md`
   - `ROADMAP.md`, `PRD.md` и другие документы вторичны и обязаны соответствовать recovery
