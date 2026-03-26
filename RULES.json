@@ -49,7 +49,14 @@
     },
     "registry_update_required": true,
     "db_is_index_only": true,
-    "markdown_is_source_of_project_context": true
+    "db_update_required_on_project_creation": true,
+    "prefer_project_registration_script": true,
+    "markdown_is_source_of_project_context": true,
+    "single_source_of_truth": {
+      "default": "project-root/.ai-recovery.md",
+      "roadmap_is_secondary": true,
+      "prd_is_secondary": true
+    }
   },
   "git_policy": {
     "commit_discrete_completed_changes": true,
@@ -58,6 +65,14 @@
     "do_not_bundle_unrelated_changes": true,
     "ask_before_git_init_if_missing": true,
     "do_not_init_git_silently": true
+  },
+  "coding_policy": {
+    "maintain_refactor_counter": true,
+    "refactor_counter_threshold": 3,
+    "increment_after_each_discrete_feature_or_fix_step": true,
+    "allow_early_refactor_on_code_smells": true,
+    "record_refactor_in_recovery_context": true,
+    "prefer_separate_refactor_commit_when_git_exists": true
   },
   "system_work": {
     "enabled": true,

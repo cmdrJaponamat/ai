@@ -48,6 +48,20 @@ Example:
   - verification status
   - next steps
 - Prefer one focused file per topic, plus this general workflow file.
+- Для проектной разработки главным источником истины считать project recovery-файл, а не roadmap.
+- `ROADMAP.md`, `PRD.md` и другие плановые документы должны синхронизироваться с recovery, но не заменять его.
+- При появлении нового проекта обновлять оба индекса:
+  - `~/ai/PROJECT_CONTEXTS.md`
+  - `~/ai/projects.db`
+- Для обновления `projects.db` предпочитать скрипт регистрации проекта, а не ручной SQL.
+
+## Coding Rules
+
+- During coding work maintain a `refactor counter`.
+- Increment the counter after each completed discrete feature/fix step.
+- When the counter reaches `3`, do a dedicated refactor pass before continuing and then reset the counter to `0`.
+- Refactor earlier if duplication, branching complexity, or responsibility drift is already visible.
+- Record the refactor pass in project recovery notes and, when git exists, prefer a separate commit or a clearly isolated part of the commit series.
 
 ## Suggested Files In `~/ai`
 
