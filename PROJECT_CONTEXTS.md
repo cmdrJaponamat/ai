@@ -1,6 +1,6 @@
 # Project Contexts
 
-Date updated: 2026-03-20
+Date updated: 2026-03-26
 Owner: japonamat
 
 This file is the registry of project-specific recovery/context files.
@@ -24,3 +24,5 @@ Rules:
 - `obsidian-career-path` | path: `/home/japonamat/study/obsidian-career-path` | recovery: `/home/japonamat/study/obsidian-career-path/.ai-recovery.md`
 - `web` | path: `/home/japonamat/study/secondyear/webprog/web` | recovery: `/home/japonamat/study/secondyear/webprog/web/.ai-recovery.md`
 - `vkr` | path: `/home/japonamat/study/vkr` | recovery: `/home/japonamat/study/vkr/.ai-recovery.md`
+- `Photo_Trap` | path: `/home/japonamat/pet/projects/Photo_Trap` | recovery: `/home/japonamat/pet/projects/Photo_Trap/.ai-recovery.md`
+- `Dash_Recorder` | path: `/home/japonamat/pet/projects/Dash_Recorder` | recovery: `/home/japonamat/pet/projects/Dash_Recorder/.ai-recovery.md`

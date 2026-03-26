@@ -1,12 +1,12 @@
 # Инвентарь Системы
 
-Дата генерации: 2026-03-20T21:50:21+00:00
+Дата генерации: 2026-03-20T21:49:33+00:00
 
 ## Свежесть Инвентаря
 
-- package_versions: status=fresh, age_hours=0.0, ttl_hours=72, invalidated=False, reason=None
-- user_services: status=fresh, age_hours=0.0, ttl_hours=24, invalidated=False, reason=None
-- tool_paths: status=fresh, age_hours=0.0, ttl_hours=72, invalidated=False, reason=None
+- package_versions: status=stale, age_hours=0.02, ttl_hours=72, invalidated=True, reason=pacman transaction completed
+- user_services: status=fresh, age_hours=0.02, ttl_hours=24, invalidated=False, reason=None
+- tool_paths: status=fresh, age_hours=0.02, ttl_hours=72, invalidated=False, reason=None
 
 ## Система
 
