@@ -22,6 +22,17 @@
 - Во втором шаге добавлен минимальный поисковый слой без LightRAG:
   - `search-recovery <query>` для поиска по `~/ai/recovery/*.md`
   - `search-actions-log <query>` для поиска по `~/ai/actions.log`
+- В третьем шаге добавлен настоящий MCP stdio transport:
+  - локальный venv в `/home/japonamat/ai/mcp/.venv`
+  - `mcp==1.27.0` в `/home/japonamat/ai/mcp/requirements.txt`
+  - `/home/japonamat/ai/mcp/ai_control/server.py` на `FastMCP`
+  - `.gitignore` обновлен для исключения `mcp/.venv/`
+- MCP-сервер публикует инструменты:
+  - `list_projects`
+  - `read_project_recovery`
+  - `search_recovery`
+  - `search_actions_log`
+  - `append_actions_log`
 
 ## verification_status
 
@@ -29,6 +40,13 @@
 - `python3 /home/japonamat/ai/mcp/ai_control/cli.py read-project-recovery Photo_Trap` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/ai_control/cli.py search-recovery Photo_Trap --limit 5` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/ai_control/cli.py search-actions-log github-auto --limit 5` отработал успешно.
+- Импорт `server.py` подтверждает регистрацию MCP tools:
+  - `list_projects`
+  - `read_project_recovery`
+  - `search_recovery`
+  - `search_actions_log`
+  - `append_actions_log`
+- Быстрый запуск `timeout 2 /home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/ai_control/server.py` завершился без ошибки; в таком тесте stdio-сервер корректно выходит после закрытия stdin.
 
 ## rollback
 
@@ -42,6 +60,5 @@
 
 ## next_steps
 
-- Поверх текущего core добавить настоящий MCP transport.
 - После этого поднять узкий `LightRAG`-индекс для `~/ai`.
 - Затем сделать отдельный `phototrap-tools` и индекс `Photo_Trap`.
