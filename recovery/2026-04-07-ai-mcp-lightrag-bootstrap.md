@@ -42,6 +42,22 @@
   - `phototrap_read_recovery`
   - `phototrap_read_file`
   - `phototrap_search_code`
+- В пятом шаге добавлен bootstrap `LightRAG` для `~/ai`:
+  - `/home/japonamat/ai/lightrag/requirements.txt` с `lightrag-hku==1.4.13`
+  - отдельное окружение `/home/japonamat/ai/lightrag/.venv`
+  - конфиг `/home/japonamat/ai/lightrag/ai_index/config.json`
+  - список источников `/home/japonamat/ai/lightrag/ai_index/sources.json`
+  - bootstrap/query-скрипты в `/home/japonamat/ai/lightrag/scripts/`
+  - `.gitignore` обновлен для исключения `lightrag/.venv/` и index storage
+- Для первого индекса выбраны источники `~/ai`:
+  - `WORKFLOW.md`
+  - `ASSISTANT_BOOTSTRAP.md`
+  - `PROJECT_CONTEXTS.md`
+  - `actions.log`
+  - `~/ai/recovery/*.md`
+- По умолчанию bootstrap ожидает локальный Ollama:
+  - LLM: `qwen2.5:1.5b`
+  - embeddings: `bge-m3:latest`
 
 ## verification_status
 
@@ -65,6 +81,9 @@
   - `phototrap_read_file`
   - `phototrap_search_code`
 - `codex exec` с явной инструкцией использовать только `phototrap_status` успешно выполнил MCP tool call к `phototrap-tools` и вернул статус проекта без shell-команд.
+- `/home/japonamat/ai/lightrag/.venv/bin/python -m py_compile ...` для bootstrap/query-скриптов прошел успешно.
+- `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/build_ai_index.py --dry-run` успешно вернул конфиг и список из `39` источников.
+- `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/query_ai_index.py ...` сейчас корректно возвращает понятную ошибку о недоступном `ollama serve`, а не traceback.
 
 ## rollback
 
@@ -78,5 +97,7 @@
 
 ## next_steps
 
-- После этого поднять узкий `LightRAG`-индекс для `~/ai`.
-- Затем поднять индекс `Photo_Trap` и связать его с `phototrap-tools`.
+- Запустить `ollama serve`.
+- Скачать модели `qwen2.5:1.5b` и `bge-m3:latest`.
+- Собрать первый `ai_index`.
+- Затем поднять индекс `Photo_Trap` и связать оба индекса с MCP tools.

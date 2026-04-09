@@ -6,3 +6,5 @@ system_changes.db-shm
 system_changes.db-wal
 __pycache__/
 mcp/.venv/
+lightrag/.venv/
+lightrag/**/storage/

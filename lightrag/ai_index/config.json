@@ -1,0 +1,9 @@
+{
+  "name": "ai_index",
+  "working_dir": "/home/japonamat/ai/lightrag/ai_index/storage",
+  "ollama_host": "http://127.0.0.1:11434",
+  "llm_model": "qwen2.5:1.5b",
+  "embedding_model": "bge-m3:latest",
+  "embedding_dim": 1024,
+  "query_mode": "mix"
+}
