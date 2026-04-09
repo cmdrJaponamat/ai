@@ -33,6 +33,15 @@
   - `search_recovery`
   - `search_actions_log`
   - `append_actions_log`
+- В четвертом шаге добавлен отдельный project-level слой `/home/japonamat/ai/mcp/phototrap_tools/`:
+  - `tools.py` и `cli.py` с базовыми операциями по `Photo_Trap`
+  - `server.py` на `FastMCP`
+  - сервер зарегистрирован в `~/.codex/config.toml` как `phototrap-tools`
+- `phototrap-tools` публикует инструменты:
+  - `phototrap_status`
+  - `phototrap_read_recovery`
+  - `phototrap_read_file`
+  - `phototrap_search_code`
 
 ## verification_status
 
@@ -47,6 +56,15 @@
   - `search_actions_log`
   - `append_actions_log`
 - Быстрый запуск `timeout 2 /home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/ai_control/server.py` завершился без ошибки; в таком тесте stdio-сервер корректно выходит после закрытия stdin.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-status` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-recovery` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5` отработал успешно.
+- Импорт `/home/japonamat/ai/mcp/phototrap_tools/server.py` подтверждает регистрацию MCP tools:
+  - `phototrap_status`
+  - `phototrap_read_recovery`
+  - `phototrap_read_file`
+  - `phototrap_search_code`
+- `codex exec` с явной инструкцией использовать только `phototrap_status` успешно выполнил MCP tool call к `phototrap-tools` и вернул статус проекта без shell-команд.
 
 ## rollback
 
@@ -61,4 +79,4 @@
 ## next_steps
 
 - После этого поднять узкий `LightRAG`-индекс для `~/ai`.
-- Затем сделать отдельный `phototrap-tools` и индекс `Photo_Trap`.
+- Затем поднять индекс `Photo_Trap` и связать его с `phototrap-tools`.
