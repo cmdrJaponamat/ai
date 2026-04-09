@@ -4,7 +4,13 @@ import argparse
 import json
 import sys
 
-from tools import append_actions_log, list_projects, read_project_recovery
+from tools import (
+    append_actions_log,
+    list_projects,
+    read_project_recovery,
+    search_actions_log,
+    search_recovery_notes,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,6 +21,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     recovery_parser = subparsers.add_parser("read-project-recovery")
     recovery_parser.add_argument("project_name")
+
+    search_recovery_parser = subparsers.add_parser("search-recovery")
+    search_recovery_parser.add_argument("query")
+    search_recovery_parser.add_argument("--limit", type=int, default=10)
+
+    search_actions_parser = subparsers.add_parser("search-actions-log")
+    search_actions_parser.add_argument("query")
+    search_actions_parser.add_argument("--limit", type=int, default=10)
 
     log_parser = subparsers.add_parser("append-actions-log")
     log_parser.add_argument("--what", required=True)
@@ -44,6 +58,29 @@ def main() -> int:
 
     if args.command == "read-project-recovery":
         print(read_project_recovery(args.project_name))
+        return 0
+
+    if args.command == "search-recovery":
+        payload = [
+            {
+                "path": str(hit.path),
+                "line_number": hit.line_number,
+                "line": hit.line,
+            }
+            for hit in search_recovery_notes(args.query, limit=args.limit)
+        ]
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "search-actions-log":
+        payload = [
+            {
+                "line_number": hit.line_number,
+                "line": hit.line,
+            }
+            for hit in search_actions_log(args.query, limit=args.limit)
+        ]
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "append-actions-log":

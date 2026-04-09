@@ -9,6 +9,7 @@ import re
 AI_ROOT = Path("/home/japonamat/ai")
 PROJECT_REGISTRY = AI_ROOT / "PROJECT_CONTEXTS.md"
 ACTIONS_LOG = AI_ROOT / "actions.log"
+RECOVERY_DIR = AI_ROOT / "recovery"
 
 PROJECT_LINE_RE = re.compile(
     r"^- `(?P<name>[^`]+)` \| path: `(?P<path>[^`]+)` \| recovery: `(?P<recovery>[^`]+)`$"
@@ -20,6 +21,19 @@ class ProjectEntry:
     name: str
     path: Path
     recovery: Path
+
+
+@dataclass(frozen=True)
+class RecoverySearchHit:
+    path: Path
+    line_number: int
+    line: str
+
+
+@dataclass(frozen=True)
+class ActionsLogHit:
+    line_number: int
+    line: str
 
 
 def list_projects() -> list[ProjectEntry]:
@@ -49,6 +63,37 @@ def get_project(name: str) -> ProjectEntry:
 def read_project_recovery(name: str) -> str:
     entry = get_project(name)
     return entry.recovery.read_text(encoding="utf-8")
+
+
+def search_recovery_notes(query: str, limit: int = 10) -> list[RecoverySearchHit]:
+    normalized = query.casefold()
+    hits: list[RecoverySearchHit] = []
+    for path in sorted(RECOVERY_DIR.glob("*.md")):
+        for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if normalized not in raw_line.casefold():
+                continue
+            hits.append(
+                RecoverySearchHit(
+                    path=path,
+                    line_number=line_number,
+                    line=raw_line.strip(),
+                )
+            )
+            if len(hits) >= limit:
+                return hits
+    return hits
+
+
+def search_actions_log(query: str, limit: int = 10) -> list[ActionsLogHit]:
+    normalized = query.casefold()
+    hits: list[ActionsLogHit] = []
+    for line_number, raw_line in enumerate(ACTIONS_LOG.read_text(encoding="utf-8").splitlines(), start=1):
+        if normalized not in raw_line.casefold():
+            continue
+        hits.append(ActionsLogHit(line_number=line_number, line=raw_line))
+        if len(hits) >= limit:
+            return hits
+    return hits
 
 
 def append_actions_log(

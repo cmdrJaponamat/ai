@@ -19,11 +19,16 @@
   - чтение project recovery по имени проекта
   - запись в `actions.log`
 - Добавлен `cli.py` для локальной проверки без внешнего MCP SDK.
+- Во втором шаге добавлен минимальный поисковый слой без LightRAG:
+  - `search-recovery <query>` для поиска по `~/ai/recovery/*.md`
+  - `search-actions-log <query>` для поиска по `~/ai/actions.log`
 
 ## verification_status
 
 - `python3 /home/japonamat/ai/mcp/ai_control/cli.py list-projects` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/ai_control/cli.py read-project-recovery Photo_Trap` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/ai_control/cli.py search-recovery Photo_Trap --limit 5` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/ai_control/cli.py search-actions-log github-auto --limit 5` отработал успешно.
 
 ## rollback
 
@@ -37,6 +42,6 @@
 
 ## next_steps
 
-- Добавить поиск по `~/ai/recovery` и `actions.log`.
 - Поверх текущего core добавить настоящий MCP transport.
-- После этого поднять узкий `LightRAG`-индекс для `~/ai`, затем отдельный индекс для `Photo_Trap`.
+- После этого поднять узкий `LightRAG`-индекс для `~/ai`.
+- Затем сделать отдельный `phototrap-tools` и индекс `Photo_Trap`.
