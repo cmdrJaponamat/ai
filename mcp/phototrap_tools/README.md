@@ -13,6 +13,8 @@
 
 - `phototrap-status` - краткий git status проекта
 - `phototrap-read-recovery` - читает `.ai-recovery.md` проекта
+- `phototrap-safe-split-audit` - аудит крупных `.kt` файлов и лимита `700`
+- `phototrap-refactor-checkpoint` - `git status` + крупные `.kt` + лимит + `assembleDebug`
 - `phototrap-read-file <relative_path>` - читает конкретный файл внутри проекта
 - `phototrap-search-code <query>` - ищет текст по проекту через `rg`
 
@@ -21,6 +23,8 @@
 ```bash
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-status
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-recovery
+python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 10
+python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 8
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-file app/src/main/java/com/cmdrjaponamat/phototrap/camera/MediaIndexRepository.kt
 ```

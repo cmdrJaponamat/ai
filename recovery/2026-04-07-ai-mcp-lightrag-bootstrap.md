@@ -42,6 +42,20 @@
   - `phototrap_read_recovery`
   - `phototrap_read_file`
   - `phototrap_search_code`
+- Затем `phototrap-tools` был расширен двумя повторяющимися инженерными командами:
+  - `phototrap_safe_split_audit`
+  - `phototrap_refactor_checkpoint`
+- `phototrap_safe_split_audit` дает:
+  - топ крупных `.kt`
+  - текущий лимит
+  - список файлов выше лимита
+  - список крупнейших файлов, которые уже в лимите
+- `phototrap_refactor_checkpoint` дает:
+  - `git status`
+  - branch
+  - топ крупных `.kt`
+  - подсветку файлов выше лимита
+  - результат `./gradlew assembleDebug`
 - В пятом шаге добавлен bootstrap `LightRAG` для `~/ai`:
   - `/home/japonamat/ai/lightrag/requirements.txt` с `lightrag-hku==1.4.13`
   - отдельное окружение `/home/japonamat/ai/lightrag/.venv`
@@ -75,12 +89,18 @@
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-status` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-recovery` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 8` отработал успешно.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 6` отработал успешно и вернул успешный `assembleDebug`.
 - Импорт `/home/japonamat/ai/mcp/phototrap_tools/server.py` подтверждает регистрацию MCP tools:
   - `phototrap_status`
   - `phototrap_read_recovery`
   - `phototrap_read_file`
   - `phototrap_search_code`
+- Импорт `/home/japonamat/ai/mcp/phototrap_tools/server.py` также подтверждает регистрацию:
+  - `phototrap_safe_split_audit`
+  - `phototrap_refactor_checkpoint`
 - `codex exec` с явной инструкцией использовать только `phototrap_status` успешно выполнил MCP tool call к `phototrap-tools` и вернул статус проекта без shell-команд.
+- `codex exec` с явной инструкцией использовать только `phototrap_safe_split_audit` успешно выполнил MCP tool call и вернул текущий split-аудит без shell-команд.
 - `/home/japonamat/ai/lightrag/.venv/bin/python -m py_compile ...` для bootstrap/query-скриптов прошел успешно.
 - `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/build_ai_index.py --dry-run` успешно вернул конфиг и список из `39` источников.
 - `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/query_ai_index.py ...` сейчас корректно возвращает понятную ошибку о недоступном `ollama serve`, а не traceback.

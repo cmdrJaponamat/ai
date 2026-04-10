@@ -14,6 +14,8 @@ from tools import (
     project_status as project_status_core,
     read_file as read_file_core,
     read_recovery as read_recovery_core,
+    refactor_checkpoint as refactor_checkpoint_core,
+    safe_split_audit as safe_split_audit_core,
     search_code as search_code_core,
 )
 
@@ -35,6 +37,16 @@ def phototrap_status() -> dict[str, str]:
 @server.tool(description="Read the Photo_Trap .ai-recovery.md file")
 def phototrap_read_recovery() -> str:
     return read_recovery_core()
+
+
+@server.tool(description="Audit large Kotlin files and show which ones exceed the current split limit")
+def phototrap_safe_split_audit(top_n: int = 15, line_limit: int = 700) -> dict:
+    return safe_split_audit_core(top_n=top_n, line_limit=line_limit)
+
+
+@server.tool(description="Run a refactor checkpoint: git status, large Kotlin files, limit audit, and assembleDebug")
+def phototrap_refactor_checkpoint(top_n: int = 10, line_limit: int = 700) -> dict:
+    return refactor_checkpoint_core(top_n=top_n, line_limit=line_limit)
 
 
 @server.tool(description="Read a file inside the Photo_Trap project by relative path")

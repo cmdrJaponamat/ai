@@ -4,7 +4,14 @@ import argparse
 import json
 import sys
 
-from tools import project_status, read_file, read_recovery, search_code
+from tools import (
+    project_status,
+    read_file,
+    read_recovery,
+    refactor_checkpoint,
+    safe_split_audit,
+    search_code,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -13,6 +20,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("phototrap-status")
     subparsers.add_parser("phototrap-read-recovery")
+
+    split_audit_parser = subparsers.add_parser("phototrap-safe-split-audit")
+    split_audit_parser.add_argument("--top-n", type=int, default=15)
+    split_audit_parser.add_argument("--line-limit", type=int, default=700)
+
+    checkpoint_parser = subparsers.add_parser("phototrap-refactor-checkpoint")
+    checkpoint_parser.add_argument("--top-n", type=int, default=10)
+    checkpoint_parser.add_argument("--line-limit", type=int, default=700)
 
     read_file_parser = subparsers.add_parser("phototrap-read-file")
     read_file_parser.add_argument("relative_path")
@@ -34,6 +49,26 @@ def main() -> int:
 
     if args.command == "phototrap-read-recovery":
         print(read_recovery())
+        return 0
+
+    if args.command == "phototrap-safe-split-audit":
+        print(
+            json.dumps(
+                safe_split_audit(top_n=args.top_n, line_limit=args.line_limit),
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    if args.command == "phototrap-refactor-checkpoint":
+        print(
+            json.dumps(
+                refactor_checkpoint(top_n=args.top_n, line_limit=args.line_limit),
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
     if args.command == "phototrap-read-file":
