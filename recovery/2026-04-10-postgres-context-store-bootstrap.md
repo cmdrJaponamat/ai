@@ -25,6 +25,13 @@
   - `document_chunks`
   - `snapshots`
   - `ingestion_runs`
+- Затем схема расширена таблицей `kb_projections` для компактных project projection:
+  - `overview`
+  - `state_summary`
+  - `next_steps`
+  - `decisions`
+  - `constraints`
+  - `source_refs`
 - Добавлено расширение `pg_trgm`.
 - Добавлены индексы для `documents` и `snapshots`.
 - Добавлены файлы bootstrap в `/home/japonamat/ai/postgres/`:
@@ -43,7 +50,24 @@
   - `context_get_project`
   - `context_list_snapshots`
   - `context_record_snapshot`
+- `context-tools` затем расширен kb-инструментами:
+  - `kb_capture_project_bundle`
+  - `kb_bootstrap_projection`
+  - `kb_rebuild_project_projection`
+  - `kb_get_project_overview`
+  - `kb_get_project_state`
+  - `kb_get_next_steps`
+  - `kb_get_decisions`
+  - `kb_get_constraints`
+  - `kb_get_source_refs`
+  - `kb_validate_projection`
 - `context-tools` зарегистрирован в `~/.codex/config.toml` как MCP server `context-tools`.
+- Для `Photo_Trap` собран первый `kb_projection` из:
+  - `.ai-recovery.md`
+  - `docs/TODO.md`
+  - `docs/ARCHITECTURE.md`
+  - `README.md`
+- Исправлено чтение `kb_projections`: вместо разбора `psql -AtF "\\t"` по табам теперь используется `row_to_json(...)`, чтобы многострочные поля и JSON-массивы не ломали загрузку projection.
 
 ## verification_status
 
@@ -63,8 +87,23 @@
   - успешно записал snapshots в `ai_context.snapshots`
 - `python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap --limit 3`
   - успешно вернул последние snapshots
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-bootstrap-projection Photo_Trap`
+  - успешно собрал `kb_projection` для `Photo_Trap`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-project-overview Photo_Trap`
+  - успешно вернул `overview`, `source_refs` и `updated_at`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-project-state Photo_Trap`
+  - успешно вернул `state_summary` и `constraints`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-next-steps Photo_Trap`
+  - успешно вернул extracted `next_steps`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-validate-projection Photo_Trap`
+  - вернул `valid: true`
+- `psql -h 127.0.0.1 -U japonamat -d ai_context -c 'select ... from kb_projections;'`
+  - подтвердил, что projection-row реально существует в базе
 - `codex exec` с явной инструкцией использовать только `context_list_snapshots`
   - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
+- Повторная `codex exec` проверка для `kb_get_project_overview`
+  - не завершилась из-за client usage limit
+  - это внешний лимит клиента, а не ошибка MCP server или SQL-слоя
 
 ## rollback
 
@@ -81,9 +120,10 @@
 ## next_steps
 
 - Добавить MCP `context-tools` поверх `ai_context`.
-- Перенести в Postgres не только `projects`, но и индексируемые документы:
-  - `~/ai/recovery/*.md`
-  - `~/ai/actions.log`
-  - `Photo_Trap/.ai-recovery.md`
-  - `Photo_Trap/docs/TODO.md`
-- Добавить первые query-tools поверх `pg_trgm`.
+- Автоматически писать в `snapshots` результаты:
+  - `phototrap_safe_split_audit`
+  - `phototrap_refactor_checkpoint`
+  - `phototrap_recovery_sync_audit`
+  - `phototrap_module_seam_check`
+- Добавить query-tools поверх `pg_trgm` и `documents`.
+- Сжать extraction-логику для `next_steps` и `state_summary`, чтобы в projection не попадали лишние markdown-заголовки.

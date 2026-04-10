@@ -52,10 +52,23 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS kb_projections (
+    project_id BIGINT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+    bundle_hash TEXT NOT NULL,
+    overview TEXT NOT NULL,
+    state_summary TEXT NOT NULL,
+    next_steps JSONB NOT NULL DEFAULT '[]'::jsonb,
+    decisions JSONB NOT NULL DEFAULT '[]'::jsonb,
+    constraints JSONB NOT NULL DEFAULT '[]'::jsonb,
+    source_refs JSONB NOT NULL DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_documents_project_id ON documents(project_id);
 CREATE INDEX IF NOT EXISTS idx_documents_source_type ON documents(source_type);
 CREATE INDEX IF NOT EXISTS idx_snapshots_project_id ON snapshots(project_id);
 CREATE INDEX IF NOT EXISTS idx_snapshots_type ON snapshots(snapshot_type);
+CREATE INDEX IF NOT EXISTS idx_kb_projections_updated_at ON kb_projections(updated_at);
 CREATE INDEX IF NOT EXISTS idx_documents_content_trgm ON documents USING gin (content gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_documents_title_trgm ON documents USING gin (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_documents_path_trgm ON documents USING gin (path gin_trgm_ops);
