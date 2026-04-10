@@ -16,9 +16,11 @@ from tools import (
     kb_capture_project_bundle as kb_capture_project_bundle_core,
     kb_get_constraints as kb_get_constraints_core,
     kb_get_decisions as kb_get_decisions_core,
+    kb_get_active_tasks as kb_get_active_tasks_core,
     kb_get_next_steps as kb_get_next_steps_core,
     kb_get_project_overview as kb_get_project_overview_core,
     kb_project_status as kb_project_status_core,
+    kb_project_status_compact as kb_project_status_compact_core,
     kb_get_project_state as kb_get_project_state_core,
     kb_get_source_refs as kb_get_source_refs_core,
     kb_rebuild_project_projection as kb_rebuild_project_projection_core,
@@ -73,6 +75,11 @@ def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
     return kb_project_status_core(project_name, snapshot_limit=snapshot_limit)
 
 
+@server.tool(description="Get compact low-token project status for fast rehydrate and routing")
+def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dict:
+    return kb_project_status_compact_core(project_name, snapshot_limit=snapshot_limit)
+
+
 @server.tool(description="Get the current state summary and constraints from kb_projections")
 def kb_get_project_state(project_name: str) -> dict:
     return kb_get_project_state_core(project_name)
@@ -81,6 +88,11 @@ def kb_get_project_state(project_name: str) -> dict:
 @server.tool(description="Get next steps from kb_projections")
 def kb_get_next_steps(project_name: str) -> dict:
     return kb_get_next_steps_core(project_name)
+
+
+@server.tool(description="Get active tasks extracted from TODO P0, recovery next steps, and current refactor checkpoint")
+def kb_get_active_tasks(project_name: str, limit: int = 5) -> dict:
+    return kb_get_active_tasks_core(project_name, limit=limit)
 
 
 @server.tool(description="Get extracted project decisions from kb_projections")

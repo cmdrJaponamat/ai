@@ -10,9 +10,11 @@ from tools import (
     kb_capture_project_bundle,
     kb_get_constraints,
     kb_get_decisions,
+    kb_get_active_tasks,
     kb_get_next_steps,
     kb_get_project_overview,
     kb_project_status,
+    kb_project_status_compact,
     kb_get_project_state,
     kb_get_source_refs,
     kb_rebuild_project_projection,
@@ -37,8 +39,10 @@ def build_parser() -> argparse.ArgumentParser:
         "kb-bootstrap-projection",
         "kb-rebuild-project-projection",
         "kb-project-status",
+        "kb-project-status-compact",
         "kb-get-project-overview",
         "kb-get-project-state",
+        "kb-get-active-tasks",
         "kb-get-next-steps",
         "kb-get-decisions",
         "kb-get-constraints",
@@ -94,8 +98,16 @@ def main() -> int:
         print(json.dumps(kb_project_status(args.project_name), ensure_ascii=False, indent=2))
         return 0
 
+    if args.command == "kb-project-status-compact":
+        print(json.dumps(kb_project_status_compact(args.project_name), ensure_ascii=False, indent=2))
+        return 0
+
     if args.command == "kb-get-project-state":
         print(json.dumps(kb_get_project_state(args.project_name), ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "kb-get-active-tasks":
+        print(json.dumps(kb_get_active_tasks(args.project_name), ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "kb-get-next-steps":

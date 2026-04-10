@@ -52,9 +52,11 @@
   - `context_record_snapshot`
 - `context-tools` затем расширен kb-инструментами:
   - `kb_project_status`
+  - `kb_project_status_compact`
   - `kb_capture_project_bundle`
   - `kb_bootstrap_projection`
   - `kb_rebuild_project_projection`
+  - `kb_get_active_tasks`
   - `kb_get_project_overview`
   - `kb_get_project_state`
   - `kb_get_next_steps`
@@ -110,6 +112,10 @@
   - успешно отработал уже через `psycopg`
 - `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-project-status Photo_Trap`
   - успешно вернул агрегированный status из project row, projection и recent snapshots
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-project-status-compact Photo_Trap`
+  - успешно вернул укороченный low-token status для быстрого rehydrate
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-active-tasks Photo_Trap`
+  - успешно вытащил активные задачи из `TODO.md` и current recovery next steps без чтения всего backlog
 - `codex exec` с явной инструкцией использовать только `context_list_snapshots`
   - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
 - Повторная `codex exec` проверка для `kb_get_project_overview`
@@ -137,6 +143,7 @@
   - `phototrap_recovery_sync_audit`
   - `phototrap_module_seam_check`
 - Добавить более компактную версию `kb_project_status`, чтобы большие поля можно было получать отдельно, а status оставался коротким bootstrap-ответом.
+- Подчистить `focus` в `kb_project_status_compact`: сейчас туда попадают первые строки `current_state`, но они еще излишне repo-oriented.
 - Добавить query-tools поверх `pg_trgm` и `documents`.
 - Сжать extraction-логику для `next_steps` и `state_summary`, чтобы в projection не попадали лишние markdown-заголовки.
 - При желании потом вынести этот DB-слой в общий `ai/mcp/db_runtime`, чтобы его могли переиспользовать и другие MCP servers.

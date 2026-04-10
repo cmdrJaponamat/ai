@@ -194,6 +194,35 @@ def _trim_paragraph(section_text: str, max_lines: int = 8) -> str:
     return "\n".join(lines[:max_lines]).strip()
 
 
+def _extract_section_blocks(markdown_text: str, heading: str) -> list[str]:
+    section = _markdown_section(markdown_text, heading)
+    if not section:
+        return []
+
+    blocks: list[str] = []
+    current: list[str] = []
+    for raw_line in section.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if raw_line.startswith("- "):
+            if current:
+                blocks.append("\n".join(current).strip())
+            current = [stripped[2:].strip()]
+            continue
+        if current:
+            current.append(stripped)
+    if current:
+        blocks.append("\n".join(current).strip())
+    return blocks
+
+
+def _compact_text(text: str, max_lines: int = 3) -> str:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return " ".join(lines[:max_lines]).strip()
+
+
 def kb_capture_project_bundle(project_name: str) -> dict:
     project = get_project(project_name)
     bundle = _bundle_sources(project_name)
@@ -384,6 +413,22 @@ def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
     }
 
 
+def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dict:
+    project = get_project(project_name)
+    projection = _load_projection(project_name)
+    recent_snapshots = list_snapshots(project_name, limit=snapshot_limit)
+    return {
+        "project_name": str(project["name"]),
+        "active": bool(project["active"]),
+        "overview": _compact_text(projection["overview"], max_lines=2),
+        "focus": _compact_text(projection["state_summary"], max_lines=2),
+        "next_steps": projection["next_steps"][:3],
+        "constraints": projection["constraints"][:4],
+        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
+        "projection_updated_at": projection["updated_at"],
+    }
+
+
 def kb_get_project_state(project_name: str) -> dict:
     projection = _load_projection(project_name)
     return {
@@ -400,6 +445,32 @@ def kb_get_next_steps(project_name: str) -> dict:
         "project_name": projection["project_name"],
         "next_steps": projection["next_steps"],
         "updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_active_tasks(project_name: str, limit: int = 5) -> dict:
+    bundle = _bundle_sources(project_name)
+    by_name = {Path(item["path"]).name: item["content"] for item in bundle}
+    todo = by_name.get("TODO.md", "")
+    recovery = by_name.get(".ai-recovery.md", "")
+
+    p0_blocks = _extract_section_blocks(todo, "P0")
+    current_steps = _extract_bullets(_markdown_section(recovery, "current_next_steps"), limit=max(limit, 1))
+    checkpoint_blocks = _extract_section_blocks(todo, "Current Refactor Checkpoint")
+
+    tasks: list[dict[str, str]] = []
+    for item in p0_blocks[: max(limit, 1)]:
+        tasks.append({"source": "todo_p0", "text": _compact_text(item, max_lines=4)})
+    for item in current_steps[: max(limit - len(tasks), 0)]:
+        tasks.append({"source": "recovery_current_next_steps", "text": item})
+    if len(tasks) < limit and checkpoint_blocks:
+        for item in checkpoint_blocks[: limit - len(tasks)]:
+            tasks.append({"source": "todo_refactor_checkpoint", "text": _compact_text(item, max_lines=3)})
+
+    return {
+        "project_name": project_name,
+        "active_tasks": tasks[:limit],
+        "count": len(tasks[:limit]),
     }
 
 
