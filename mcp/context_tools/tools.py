@@ -363,6 +363,27 @@ def kb_get_project_overview(project_name: str) -> dict:
     }
 
 
+def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
+    project = get_project(project_name)
+    projection = _load_projection(project_name)
+    recent_snapshots = list_snapshots(project_name, limit=snapshot_limit)
+    return {
+        "project_name": str(project["name"]),
+        "project_id": int(project["id"]),
+        "active": bool(project["active"]),
+        "repo_root": str(project["repo_root"]),
+        "recovery_file": str(project["recovery_file"]),
+        "overview": projection["overview"],
+        "state_summary": projection["state_summary"],
+        "next_steps": projection["next_steps"],
+        "constraints": projection["constraints"],
+        "source_refs": projection["source_refs"],
+        "projection_updated_at": projection["updated_at"],
+        "recent_snapshots": recent_snapshots,
+        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
+    }
+
+
 def kb_get_project_state(project_name: str) -> dict:
     projection = _load_projection(project_name)
     return {

@@ -12,6 +12,7 @@ from tools import (
     kb_get_decisions,
     kb_get_next_steps,
     kb_get_project_overview,
+    kb_project_status,
     kb_get_project_state,
     kb_get_source_refs,
     kb_rebuild_project_projection,
@@ -35,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
         "kb-capture-project-bundle",
         "kb-bootstrap-projection",
         "kb-rebuild-project-projection",
+        "kb-project-status",
         "kb-get-project-overview",
         "kb-get-project-state",
         "kb-get-next-steps",
@@ -86,6 +88,10 @@ def main() -> int:
 
     if args.command == "kb-get-project-overview":
         print(json.dumps(kb_get_project_overview(args.project_name), ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "kb-project-status":
+        print(json.dumps(kb_project_status(args.project_name), ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "kb-get-project-state":

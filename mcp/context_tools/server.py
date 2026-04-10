@@ -18,6 +18,7 @@ from tools import (
     kb_get_decisions as kb_get_decisions_core,
     kb_get_next_steps as kb_get_next_steps_core,
     kb_get_project_overview as kb_get_project_overview_core,
+    kb_project_status as kb_project_status_core,
     kb_get_project_state as kb_get_project_state_core,
     kb_get_source_refs as kb_get_source_refs_core,
     kb_rebuild_project_projection as kb_rebuild_project_projection_core,
@@ -65,6 +66,11 @@ def kb_rebuild_project_projection(project_name: str) -> dict:
 @server.tool(description="Get the current project overview from kb_projections")
 def kb_get_project_overview(project_name: str) -> dict:
     return kb_get_project_overview_core(project_name)
+
+
+@server.tool(description="Get compact project status aggregated from project row, projection, and recent snapshots")
+def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
+    return kb_project_status_core(project_name, snapshot_limit=snapshot_limit)
 
 
 @server.tool(description="Get the current state summary and constraints from kb_projections")
