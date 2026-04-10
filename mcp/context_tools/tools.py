@@ -3,130 +3,89 @@ from __future__ import annotations
 from pathlib import Path
 import hashlib
 import json
-import subprocess
 import re
 
-
-PG_DSN = ["psql", "-h", "127.0.0.1", "-U", "japonamat", "ai_context"]
-
-
-def _run_sql(sql: str) -> str:
-    completed = subprocess.run(
-        PG_DSN + ["-AtF", "\t", "-c", sql],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(completed.stderr.strip() or "psql query failed")
-    return completed.stdout.strip()
+from db_runtime import DBRepository
 
 
-def _run_sql_json(sql: str) -> dict | list:
-    output = _run_sql(sql)
-    line = _first_data_line(output)
-    if not line:
-        raise ValueError("SQL query returned no JSON payload")
-    return json.loads(line)
-
-
-def _first_data_line(output: str) -> str:
-    for line in output.splitlines():
-        normalized = line.strip()
-        if not normalized:
-            continue
-        if normalized.startswith(("INSERT ", "UPDATE ", "DELETE ")):
-            continue
-        return normalized
-    return ""
-
-
-def _sql_escape(value: str) -> str:
-    return value.replace("'", "''")
+REPOSITORY = DBRepository()
 
 
 def list_projects() -> list[dict[str, str | int | bool]]:
-    output = _run_sql(
+    rows = REPOSITORY.fetch_all(
         """
-        select id, name, path, repo_root, coalesce(recovery_file, ''), active
+        select id, name, path, repo_root, coalesce(recovery_file, '') as recovery_file, active
         from projects
-        order by id;
+        order by id
         """
     )
-    rows = []
-    for line in output.splitlines():
-        if not line:
-            continue
-        project_id, name, path, repo_root, recovery_file, active = line.split("\t", 5)
-        rows.append(
-            {
-                "id": int(project_id),
-                "name": name,
-                "path": path,
-                "repo_root": repo_root,
-                "recovery_file": recovery_file,
-                "active": active == "t",
-            }
-        )
-    return rows
+    return [
+        {
+            "id": int(row["id"]),
+            "name": row["name"],
+            "path": row["path"],
+            "repo_root": row["repo_root"],
+            "recovery_file": row["recovery_file"],
+            "active": bool(row["active"]),
+        }
+        for row in rows
+    ]
 
 
 def get_project(project_name: str) -> dict[str, str | int | bool]:
-    escaped = _sql_escape(project_name)
-    output = _run_sql(
-        f"""
-        select id, name, path, repo_root, coalesce(recovery_file, ''), active
-        from projects
-        where lower(name) = lower('{escaped}')
-        limit 1;
+    row = REPOSITORY.fetch_one(
         """
+        select id, name, path, repo_root, coalesce(recovery_file, '') as recovery_file, active
+        from projects
+        where lower(name) = lower(%s)
+        limit 1
+        """,
+        (project_name,),
     )
-    if not output:
+    if row is None:
         raise ValueError(f"Project not found in ai_context: {project_name}")
-    project_id, name, path, repo_root, recovery_file, active = output.split("\t", 5)
     return {
-        "id": int(project_id),
-        "name": name,
-        "path": path,
-        "repo_root": repo_root,
-        "recovery_file": recovery_file,
-        "active": active == "t",
+        "id": int(row["id"]),
+        "name": row["name"],
+        "path": row["path"],
+        "repo_root": row["repo_root"],
+        "recovery_file": row["recovery_file"],
+        "active": bool(row["active"]),
     }
 
 
 def list_snapshots(project_name: str, snapshot_type: str | None = None, limit: int = 10) -> list[dict]:
     project = get_project(project_name)
+    params: list[object] = [project["id"]]
     snapshot_filter = ""
     if snapshot_type:
-        snapshot_filter = f"and snapshot_type = '{_sql_escape(snapshot_type)}'"
+        snapshot_filter = "and snapshot_type = %s"
+        params.append(snapshot_type)
+    params.append(int(limit))
 
-    output = _run_sql(
+    rows = REPOSITORY.fetch_all(
         f"""
-        select id, snapshot_type, coalesce(title, ''), payload::text, created_at::text
+        select id, snapshot_type, coalesce(title, '') as title, payload, created_at::text as created_at
         from snapshots
-        where project_id = {project["id"]}
+        where project_id = %s
           {snapshot_filter}
         order by id desc
-        limit {int(limit)};
-        """
+        limit %s
+        """,
+        tuple(params),
     )
 
-    rows = []
-    for line in output.splitlines():
-        if not line:
-            continue
-        snapshot_id, kind, title, payload_text, created_at = line.split("\t", 4)
-        rows.append(
-            {
-                "id": int(snapshot_id),
-                "project_name": project["name"],
-                "snapshot_type": kind,
-                "title": title,
-                "payload": json.loads(payload_text),
-                "created_at": created_at,
-            }
-        )
-    return rows
+    return [
+        {
+            "id": int(row["id"]),
+            "project_name": project["name"],
+            "snapshot_type": row["snapshot_type"],
+            "title": row["title"],
+            "payload": row["payload"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
 
 
 def record_snapshot(
@@ -136,26 +95,23 @@ def record_snapshot(
     title: str | None = None,
 ) -> dict[str, str | int]:
     project = get_project(project_name)
-    payload_json = json.dumps(payload, ensure_ascii=False)
-    title_sql = "NULL" if title is None else f"'{_sql_escape(title)}'"
-
-    snapshot_output = _run_sql(
-        f"""
-        insert into snapshots (project_id, snapshot_type, title, payload)
-        values (
-            {project["id"]},
-            '{_sql_escape(snapshot_type)}',
-            {title_sql},
-            '{_sql_escape(payload_json)}'::jsonb
-        )
-        returning id;
+    row = REPOSITORY.fetch_one(
         """
+        insert into snapshots (project_id, snapshot_type, title, payload)
+        values (%s, %s, %s, %s::jsonb)
+        returning id
+        """,
+        (
+            project["id"],
+            snapshot_type,
+            title,
+            json.dumps(payload, ensure_ascii=False),
+        ),
     )
-    snapshot_id = _first_data_line(snapshot_output)
-    if not snapshot_id:
+    if row is None:
         raise RuntimeError("Snapshot insert returned no id")
     return {
-        "id": int(snapshot_id),
+        "id": int(row["id"]),
         "project_name": str(project["name"]),
         "snapshot_type": snapshot_type,
     }
@@ -197,24 +153,15 @@ def _content_hash(text: str) -> str:
 
 
 def _upsert_document(project_id: int, source_type: str, path: str, title: str, content: str) -> None:
-    payload = _sql_escape(content)
-    _run_sql(
-        f"""
+    REPOSITORY.execute(
+        """
         insert into documents (project_id, source_type, path, title, content, content_hash, metadata, updated_at)
-        values (
-            {project_id},
-            '{_sql_escape(source_type)}',
-            '{_sql_escape(path)}',
-            '{_sql_escape(title)}',
-            '{payload}',
-            '{_content_hash(content)}',
-            '{{}}'::jsonb,
-            now()
-        )
+        values (%s, %s, %s, %s, %s, %s, '{}'::jsonb, now())
         on conflict (path, content_hash) do update set
             title = excluded.title,
-            updated_at = now();
-        """
+            updated_at = now()
+        """,
+        (project_id, source_type, path, title, content, _content_hash(content)),
     )
 
 
@@ -332,21 +279,11 @@ def kb_bootstrap_projection(project_name: str) -> dict:
     project = get_project(project_name)
     bundle_info = kb_capture_project_bundle(project_name)
     projection = _build_projection(project_name)
-    _run_sql(
-        f"""
+    REPOSITORY.execute(
+        """
         insert into kb_projections (
             project_id, bundle_hash, overview, state_summary, next_steps, decisions, constraints, source_refs, updated_at
-        ) values (
-            {project["id"]},
-            '{_sql_escape(projection["bundle_hash"])}',
-            '{_sql_escape(projection["overview"])}',
-            '{_sql_escape(projection["state_summary"])}',
-            '{_sql_escape(json.dumps(projection["next_steps"], ensure_ascii=False))}'::jsonb,
-            '{_sql_escape(json.dumps(projection["decisions"], ensure_ascii=False))}'::jsonb,
-            '{_sql_escape(json.dumps(projection["constraints"], ensure_ascii=False))}'::jsonb,
-            '{_sql_escape(json.dumps(projection["source_refs"], ensure_ascii=False))}'::jsonb,
-            now()
-        )
+        ) values (%s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::jsonb, now())
         on conflict (project_id) do update set
             bundle_hash = excluded.bundle_hash,
             overview = excluded.overview,
@@ -355,8 +292,18 @@ def kb_bootstrap_projection(project_name: str) -> dict:
             decisions = excluded.decisions,
             constraints = excluded.constraints,
             source_refs = excluded.source_refs,
-            updated_at = now();
-        """
+            updated_at = now()
+        """,
+        (
+            project["id"],
+            projection["bundle_hash"],
+            projection["overview"],
+            projection["state_summary"],
+            json.dumps(projection["next_steps"], ensure_ascii=False),
+            json.dumps(projection["decisions"], ensure_ascii=False),
+            json.dumps(projection["constraints"], ensure_ascii=False),
+            json.dumps(projection["source_refs"], ensure_ascii=False),
+        ),
     )
     return {
         "project_name": project["name"],
@@ -374,24 +321,22 @@ def kb_rebuild_project_projection(project_name: str) -> dict:
 
 def _load_projection(project_name: str) -> dict:
     project = get_project(project_name)
-    row = _run_sql_json(
-        f"""
-        select row_to_json(projection_row)
-        from kb_projections
-        cross join lateral (
-            select
-                bundle_hash,
-                overview,
-                state_summary,
-                next_steps,
-                decisions,
-                constraints,
-                source_refs,
-                updated_at::text as updated_at
-        ) as projection_row
-        where project_id = {project["id"]}
-        limit 1;
+    row = REPOSITORY.fetch_one(
         """
+        select
+            bundle_hash,
+            overview,
+            state_summary,
+            next_steps,
+            decisions,
+            constraints,
+            source_refs,
+            updated_at::text as updated_at
+        from kb_projections
+        where project_id = %s
+        limit 1
+        """,
+        (project["id"],),
     )
     if not row:
         raise ValueError(f"No kb_projection found for project: {project_name}")

@@ -68,6 +68,10 @@
   - `docs/ARCHITECTURE.md`
   - `README.md`
 - Исправлено чтение `kb_projections`: вместо разбора `psql -AtF "\\t"` по табам теперь используется `row_to_json(...)`, чтобы многострочные поля и JSON-массивы не ломали загрузку projection.
+- `context-tools` переведен с shell-вызовов `psql` на `psycopg`-адаптер, частично заимствованный по подходу из `CodexKnowledgeHelper`:
+  - env-driven `DBSettings`
+  - `DBRepository`
+  - прямые параметризованные SQL-запросы вместо shell transport
 
 ## verification_status
 
@@ -99,6 +103,10 @@
   - вернул `valid: true`
 - `psql -h 127.0.0.1 -U japonamat -d ai_context -c 'select ... from kb_projections;'`
   - подтвердил, что projection-row реально существует в базе
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-project-overview Photo_Trap`
+  - успешно отработал уже через `psycopg`
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-validate-projection Photo_Trap`
+  - успешно отработал уже через `psycopg`
 - `codex exec` с явной инструкцией использовать только `context_list_snapshots`
   - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
 - Повторная `codex exec` проверка для `kb_get_project_overview`
@@ -127,3 +135,4 @@
   - `phototrap_module_seam_check`
 - Добавить query-tools поверх `pg_trgm` и `documents`.
 - Сжать extraction-логику для `next_steps` и `state_summary`, чтобы в projection не попадали лишние markdown-заголовки.
+- При желании потом вынести этот DB-слой в общий `ai/mcp/db_runtime`, чтобы его могли переиспользовать и другие MCP servers.

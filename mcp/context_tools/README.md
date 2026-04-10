@@ -2,6 +2,8 @@
 
 Минимальный MCP/core слой поверх PostgreSQL базы `ai_context`.
 
+DB-доступ теперь сделан через `psycopg`, по мотивам `CodexKnowledgeHelper`, а не через shell-вызовы `psql`.
+
 Первый шаг специально узкий:
 
 - читать проекты из `ai_context.projects`
@@ -31,12 +33,27 @@
 ## Быстрая проверка
 
 ```bash
-python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-projects
-python3 /home/japonamat/ai/mcp/context_tools/cli.py context-get-project Photo_Trap
-python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap
-python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-bootstrap-projection Photo_Trap
-python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-project-overview Photo_Trap
-python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-next-steps Photo_Trap
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-projects
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py context-get-project Photo_Trap
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-bootstrap-projection Photo_Trap
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-project-overview Photo_Trap
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-next-steps Photo_Trap
+```
+
+## Конфигурация БД
+
+По умолчанию используется:
+
+```text
+postgresql://japonamat@127.0.0.1/ai_context
+```
+
+При необходимости можно переопределить:
+
+```text
+AI_CONTEXT_DSN=postgresql://user@127.0.0.1/ai_context
+AI_CONTEXT_CONNECT_TIMEOUT=10
 ```
 
 ## Следующий шаг
