@@ -262,6 +262,13 @@ def _snapshot_summary(snapshot: dict) -> str:
     return title
 
 
+def _latest_snapshot_by_type(snapshots: list[dict], snapshot_type: str) -> dict | None:
+    for item in snapshots:
+        if item.get("snapshot_type") == snapshot_type:
+            return item
+    return None
+
+
 def kb_capture_project_bundle(project_name: str) -> dict:
     project = get_project(project_name)
     bundle = _bundle_sources(project_name)
@@ -456,7 +463,9 @@ def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
 def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dict:
     project = get_project(project_name)
     projection = _load_projection(project_name)
-    recent_snapshots = list_snapshots(project_name, limit=snapshot_limit)
+    recent_snapshots = list_snapshots(project_name, limit=max(snapshot_limit, 8))
+    recent_snapshot_summaries = [_snapshot_summary(item) for item in recent_snapshots[:snapshot_limit]]
+    latest_refactor_checkpoint = _latest_snapshot_by_type(recent_snapshots, "refactor_checkpoint")
     return {
         "project_name": str(project["name"]),
         "active": bool(project["active"]),
@@ -464,8 +473,9 @@ def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dic
         "focus": _compact_text(projection["state_summary"], max_lines=2),
         "next_steps": projection["next_steps"][:3],
         "constraints": projection["constraints"][:4],
-        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
-        "recent_snapshot_summaries": [_snapshot_summary(item) for item in recent_snapshots],
+        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots[:snapshot_limit]],
+        "recent_snapshot_summaries": recent_snapshot_summaries,
+        "latest_refactor_checkpoint_summary": _snapshot_summary(latest_refactor_checkpoint) if latest_refactor_checkpoint else "",
         "projection_updated_at": projection["updated_at"],
     }
 

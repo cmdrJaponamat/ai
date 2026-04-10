@@ -121,6 +121,10 @@
   - успешно записал snapshot `safe_split_audit` в `ai_context.snapshots`
 - `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap --snapshot-type safe_split_audit --limit 4`
   - сразу увидел свежий snapshot из предыдущего audit run
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 6`
+  - успешно записал snapshot `refactor_checkpoint` в `ai_context.snapshots`
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-project-status-compact Photo_Trap`
+  - теперь возвращает `latest_refactor_checkpoint_summary` и краткие summaries последних audit snapshots
 - `codex exec` с явной инструкцией использовать только `context_list_snapshots`
   - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
 - Повторная `codex exec` проверка для `kb_get_project_overview`
@@ -150,9 +154,9 @@
 - Добавить более компактную версию `kb_project_status`, чтобы большие поля можно было получать отдельно, а status оставался коротким bootstrap-ответом.
 - Подчистить `focus` в `kb_project_status_compact`: сейчас туда попадают первые строки `current_state`, но они еще излишне repo-oriented.
 - Аналогично привязать автосохранение snapshot для:
-  - `phototrap_refactor_checkpoint`
   - `phototrap_recovery_sync_audit`
   - `phototrap_module_seam_check`
+- Подчистить `focus` в `kb_project_status_compact`, чтобы в нем меньше доминировал git/repo metadata и больше был текущий инженерный смысл.
 - Добавить query-tools поверх `pg_trgm` и `documents`.
 - Сжать extraction-логику для `next_steps` и `state_summary`, чтобы в projection не попадали лишние markdown-заголовки.
 - При желании потом вынести этот DB-слой в общий `ai/mcp/db_runtime`, чтобы его могли переиспользовать и другие MCP servers.
