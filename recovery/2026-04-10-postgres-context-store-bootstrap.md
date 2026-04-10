@@ -33,6 +33,17 @@
   - `bootstrap_ai_context.sh`
   - `README.md`
 - Выполнена первая синхронизация legacy-индекса из `/home/japonamat/ai/projects.db` в `ai_context.projects`.
+- Добавлен первый MCP/core слой поверх `ai_context`:
+  - `/home/japonamat/ai/mcp/context_tools/tools.py`
+  - `/home/japonamat/ai/mcp/context_tools/cli.py`
+  - `/home/japonamat/ai/mcp/context_tools/server.py`
+  - `/home/japonamat/ai/mcp/context_tools/README.md`
+- `context-tools` публикует инструменты:
+  - `context_list_projects`
+  - `context_get_project`
+  - `context_list_snapshots`
+  - `context_record_snapshot`
+- `context-tools` зарегистрирован в `~/.codex/config.toml` как MCP server `context-tools`.
 
 ## verification_status
 
@@ -44,6 +55,16 @@
   - вернул все 5 таблиц схемы
 - `python3 /home/japonamat/ai/postgres/sync_projects_from_sqlite.py`
   - успешно синхронизировал `12` project rows
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-projects`
+  - успешно вернул список проектов из `ai_context.projects`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py context-get-project Photo_Trap`
+  - успешно вернул строку проекта `Photo_Trap`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py context-record-snapshot ...`
+  - успешно записал snapshots в `ai_context.snapshots`
+- `python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap --limit 3`
+  - успешно вернул последние snapshots
+- `codex exec` с явной инструкцией использовать только `context_list_snapshots`
+  - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
 
 ## rollback
 
