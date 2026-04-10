@@ -223,6 +223,45 @@ def _compact_text(text: str, max_lines: int = 3) -> str:
     return " ".join(lines[:max_lines]).strip()
 
 
+def _snapshot_summary(snapshot: dict) -> str:
+    snapshot_type = snapshot.get("snapshot_type", "")
+    payload = snapshot.get("payload", {}) or {}
+
+    if snapshot_type == "safe_split_audit":
+        over_limit = payload.get("over_limit_count", 0)
+        top_files = payload.get("top_files", []) or []
+        if top_files:
+            lead = top_files[0]
+            lead_text = f'{lead.get("path", "")} {lead.get("line_count", "")}'.strip()
+        elif payload.get("source") or payload.get("status"):
+            lead_text = f'{payload.get("source", "")} {payload.get("status", "")}'.strip()
+        else:
+            lead_text = ""
+        if over_limit:
+            return f"safe split: {over_limit} файлов выше лимита; крупнейший {lead_text}".strip()
+        return f"safe split: все в лимите; крупнейший {lead_text}".strip()
+
+    if snapshot_type == "refactor_checkpoint":
+        assemble = payload.get("assemble_debug", {}) or {}
+        success = assemble.get("success")
+        branch = payload.get("branch", "")
+        over_limit = len(payload.get("files_over_limit", []) or [])
+        return f"refactor checkpoint: branch={branch}, assemble={'ok' if success else 'fail'}, over_limit={over_limit}"
+
+    if snapshot_type == "recovery_sync_audit":
+        recovery_missing = payload.get("recovery_missing_count", 0)
+        todo_missing = payload.get("todo_missing_count", 0)
+        return f"recovery sync: recovery_missing={recovery_missing}, todo_missing={todo_missing}"
+
+    if snapshot_type == "module_seam_check":
+        seam_count = payload.get("seam_type_count", 0)
+        hard_files = len(payload.get("files_with_hard_dependencies", []) or [])
+        return f"module seam: seam_types={seam_count}, hard_dependency_files={hard_files}"
+
+    title = snapshot.get("title", "") or snapshot_type
+    return title
+
+
 def kb_capture_project_bundle(project_name: str) -> dict:
     project = get_project(project_name)
     bundle = _bundle_sources(project_name)
@@ -410,6 +449,7 @@ def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
         "projection_updated_at": projection["updated_at"],
         "recent_snapshots": recent_snapshots,
         "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
+        "recent_snapshot_summaries": [_snapshot_summary(item) for item in recent_snapshots],
     }
 
 
@@ -425,6 +465,7 @@ def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dic
         "next_steps": projection["next_steps"][:3],
         "constraints": projection["constraints"][:4],
         "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
+        "recent_snapshot_summaries": [_snapshot_summary(item) for item in recent_snapshots],
         "projection_updated_at": projection["updated_at"],
     }
 
