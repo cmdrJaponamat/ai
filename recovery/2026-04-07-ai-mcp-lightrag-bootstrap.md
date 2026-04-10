@@ -56,6 +56,18 @@
   - топ крупных `.kt`
   - подсветку файлов выше лимита
   - результат `./gradlew assembleDebug`
+- После этого `phototrap-tools` был расширен еще двумя архитектурными аудитами:
+  - `phototrap_recovery_sync_audit`
+  - `phototrap_module_seam_check`
+- `phototrap_recovery_sync_audit` показывает:
+  - какие recent architecture/refactor commits еще не отражены
+  - отдельно в `.ai-recovery.md`
+  - отдельно в `docs/TODO.md`
+- `phototrap_module_seam_check` показывает:
+  - seam-like типы (`Policy`, `Repository`, `Controller`, `Coordinator`, `Resolver`)
+  - файлы, которые уже зависят только от seam-like слоев
+  - файлы, где еще остались прямые жесткие зависимости
+  - top hard dependencies внутри проекта
 - В пятом шаге добавлен bootstrap `LightRAG` для `~/ai`:
   - `/home/japonamat/ai/lightrag/requirements.txt` с `lightrag-hku==1.4.13`
   - отдельное окружение `/home/japonamat/ai/lightrag/.venv`
@@ -91,6 +103,8 @@
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 8` отработал успешно.
 - `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 6` отработал успешно и вернул успешный `assembleDebug`.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-recovery-sync-audit --limit 12` отработал успешно и выявил текущие расхождения recovery/TODO.
+- `python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-module-seam-check --top-n 10` отработал успешно и вернул seam/hard dependency audit.
 - Импорт `/home/japonamat/ai/mcp/phototrap_tools/server.py` подтверждает регистрацию MCP tools:
   - `phototrap_status`
   - `phototrap_read_recovery`
@@ -99,8 +113,11 @@
 - Импорт `/home/japonamat/ai/mcp/phototrap_tools/server.py` также подтверждает регистрацию:
   - `phototrap_safe_split_audit`
   - `phototrap_refactor_checkpoint`
+  - `phototrap_recovery_sync_audit`
+  - `phototrap_module_seam_check`
 - `codex exec` с явной инструкцией использовать только `phototrap_status` успешно выполнил MCP tool call к `phototrap-tools` и вернул статус проекта без shell-команд.
 - `codex exec` с явной инструкцией использовать только `phototrap_safe_split_audit` успешно выполнил MCP tool call и вернул текущий split-аудит без shell-команд.
+- `codex exec` с явной инструкцией использовать только `phototrap_module_seam_check` успешно выполнил MCP tool call и вернул текущий seam/hard-dependency audit без shell-команд.
 - `/home/japonamat/ai/lightrag/.venv/bin/python -m py_compile ...` для bootstrap/query-скриптов прошел успешно.
 - `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/build_ai_index.py --dry-run` успешно вернул конфиг и список из `39` источников.
 - `/home/japonamat/ai/lightrag/.venv/bin/python /home/japonamat/ai/lightrag/scripts/query_ai_index.py ...` сейчас корректно возвращает понятную ошибку о недоступном `ollama serve`, а не traceback.

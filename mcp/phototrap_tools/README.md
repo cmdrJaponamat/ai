@@ -15,6 +15,8 @@
 - `phototrap-read-recovery` - читает `.ai-recovery.md` проекта
 - `phototrap-safe-split-audit` - аудит крупных `.kt` файлов и лимита `700`
 - `phototrap-refactor-checkpoint` - `git status` + крупные `.kt` + лимит + `assembleDebug`
+- `phototrap-recovery-sync-audit` - какие архитектурные коммиты еще не отражены в recovery/TODO
+- `phototrap-module-seam-check` - где уже есть seam-like зависимости и где остались жесткие concrete deps
 - `phototrap-read-file <relative_path>` - читает конкретный файл внутри проекта
 - `phototrap-search-code <query>` - ищет текст по проекту через `rg`
 
@@ -25,6 +27,8 @@ python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-status
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-recovery
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 10
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 8
+python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-recovery-sync-audit --limit 12
+python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-module-seam-check --top-n 10
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-file app/src/main/java/com/cmdrjaponamat/phototrap/camera/MediaIndexRepository.kt
 ```

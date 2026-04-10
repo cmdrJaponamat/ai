@@ -5,9 +5,11 @@ import json
 import sys
 
 from tools import (
+    module_seam_check,
     project_status,
     read_file,
     read_recovery,
+    recovery_sync_audit,
     refactor_checkpoint,
     safe_split_audit,
     search_code,
@@ -28,6 +30,12 @@ def build_parser() -> argparse.ArgumentParser:
     checkpoint_parser = subparsers.add_parser("phototrap-refactor-checkpoint")
     checkpoint_parser.add_argument("--top-n", type=int, default=10)
     checkpoint_parser.add_argument("--line-limit", type=int, default=700)
+
+    recovery_sync_parser = subparsers.add_parser("phototrap-recovery-sync-audit")
+    recovery_sync_parser.add_argument("--limit", type=int, default=20)
+
+    seam_parser = subparsers.add_parser("phototrap-module-seam-check")
+    seam_parser.add_argument("--top-n", type=int, default=12)
 
     read_file_parser = subparsers.add_parser("phototrap-read-file")
     read_file_parser.add_argument("relative_path")
@@ -65,6 +73,26 @@ def main() -> int:
         print(
             json.dumps(
                 refactor_checkpoint(top_n=args.top_n, line_limit=args.line_limit),
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    if args.command == "phototrap-recovery-sync-audit":
+        print(
+            json.dumps(
+                recovery_sync_audit(limit=args.limit),
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    if args.command == "phototrap-module-seam-check":
+        print(
+            json.dumps(
+                module_seam_check(top_n=args.top_n),
                 ensure_ascii=False,
                 indent=2,
             )

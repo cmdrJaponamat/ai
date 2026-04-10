@@ -11,9 +11,11 @@ if str(CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR))
 
 from tools import (
+    module_seam_check as module_seam_check_core,
     project_status as project_status_core,
     read_file as read_file_core,
     read_recovery as read_recovery_core,
+    recovery_sync_audit as recovery_sync_audit_core,
     refactor_checkpoint as refactor_checkpoint_core,
     safe_split_audit as safe_split_audit_core,
     search_code as search_code_core,
@@ -47,6 +49,16 @@ def phototrap_safe_split_audit(top_n: int = 15, line_limit: int = 700) -> dict:
 @server.tool(description="Run a refactor checkpoint: git status, large Kotlin files, limit audit, and assembleDebug")
 def phototrap_refactor_checkpoint(top_n: int = 10, line_limit: int = 700) -> dict:
     return refactor_checkpoint_core(top_n=top_n, line_limit=line_limit)
+
+
+@server.tool(description="Check which recent architecture/refactor commits are not yet reflected in .ai-recovery.md and docs/TODO.md")
+def phototrap_recovery_sync_audit(limit: int = 20) -> dict:
+    return recovery_sync_audit_core(limit=limit)
+
+
+@server.tool(description="Check which internal Kotlin dependencies already go through policy/repository/controller seams and where hard concrete dependencies remain")
+def phototrap_module_seam_check(top_n: int = 12) -> dict:
+    return module_seam_check_core(top_n=top_n)
 
 
 @server.tool(description="Read a file inside the Photo_Trap project by relative path")
