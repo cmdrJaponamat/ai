@@ -77,3 +77,12 @@ Area: `/home/admin-al/audit`
   - L7/VPN/TLS/CPS/CC
   - интерфейсы
   - оставшиеся security-функции
+- Для `audit_.docx` уже заполнены:
+  - раздел `1.12`
+  - раздел `2.1`
+  - раздел `2.3`
+  - раздел `3`
+- В раздел `3` внесены:
+  - `HPE MSA 2040 SFF`
+  - `HPE MSA 2040 LFF`
+  - `Synology RS2421RP+`
