@@ -109,3 +109,9 @@ class DBRepository:
             with conn.cursor() as cur:
                 cur.execute(sql, params)
 
+    def execute_returning_one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
+        with self.transaction() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+                row = cur.fetchone()
+                return dict(row) if row is not None else None

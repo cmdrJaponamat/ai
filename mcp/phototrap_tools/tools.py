@@ -5,6 +5,15 @@ from pathlib import Path
 import subprocess
 import re
 from collections import Counter
+import sys
+import json
+
+
+CONTEXT_TOOLS_DIR = Path("/home/japonamat/ai/mcp/context_tools")
+if str(CONTEXT_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(CONTEXT_TOOLS_DIR))
+
+from db_runtime import DBRepository
 
 
 PROJECT_ROOT = Path("/home/japonamat/pet/projects/Photo_Trap")
@@ -32,6 +41,8 @@ STOPWORDS = {
     "docs",
     "seam",
 }
+SNAPSHOT_PROJECT_NAME = "Photo_Trap"
+REPOSITORY = DBRepository()
 
 
 @dataclass(frozen=True)
@@ -133,6 +144,41 @@ def _run_command(command: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _record_snapshot(snapshot_type: str, payload: dict, title: str | None = None) -> dict | None:
+    project_row = REPOSITORY.fetch_one(
+        """
+        select id, name
+        from projects
+        where lower(name) = lower(%s)
+        limit 1
+        """,
+        (SNAPSHOT_PROJECT_NAME,),
+    )
+    if project_row is None:
+        return None
+
+    row = REPOSITORY.execute_returning_one(
+        """
+        insert into snapshots (project_id, snapshot_type, title, payload)
+        values (%s, %s, %s, %s::jsonb)
+        returning id, created_at::text as created_at
+        """,
+        (
+            project_row["id"],
+            snapshot_type,
+            title,
+            json.dumps(payload, ensure_ascii=False),
+        ),
+    )
+    if row is None:
+        return None
+    return {
+        "id": int(row["id"]),
+        "snapshot_type": snapshot_type,
+        "created_at": row["created_at"],
+    }
+
+
 def _collect_kotlin_file_stats() -> list[KotlinFileStat]:
     completed = _run_command(
         [
@@ -200,7 +246,7 @@ def safe_split_audit(top_n: int = 15, line_limit: int = KT_LIMIT) -> dict:
         for item in stats
         if item.line_count <= line_limit
     ]
-    return {
+    result = {
         "project_root": str(PROJECT_ROOT),
         "line_limit": line_limit,
         "top_files": top_files,
@@ -209,6 +255,14 @@ def safe_split_audit(top_n: int = 15, line_limit: int = KT_LIMIT) -> dict:
         "over_limit_files": over_limit,
         "largest_within_limit_files": within_limit[:top_n],
     }
+    snapshot = _record_snapshot(
+        "safe_split_audit",
+        result,
+        title=f"safe split audit top_n={top_n} limit={line_limit}",
+    )
+    if snapshot is not None:
+        result["snapshot_recorded"] = snapshot
+    return result
 
 
 def _parse_branch_name(status_text: str) -> str:
@@ -303,7 +357,7 @@ def module_seam_check(top_n: int = 12) -> dict:
         for name, count in hard_dependency_counter.most_common(top_n)
     ]
 
-    return {
+    result = {
         "project_root": str(PROJECT_ROOT),
         "seam_type_count": len(seam_types),
         "seam_types": [
@@ -318,6 +372,14 @@ def module_seam_check(top_n: int = 12) -> dict:
         "files_with_hard_dependencies": hard_dependency_files[:top_n],
         "top_hard_dependencies": top_hard_dependencies,
     }
+    snapshot = _record_snapshot(
+        "module_seam_check",
+        result,
+        title=f"module seam check top_n={top_n}",
+    )
+    if snapshot is not None:
+        result["snapshot_recorded"] = snapshot
+    return result
 
 
 def _recent_architecture_commits(limit: int = 20) -> list[tuple[str, str]]:
@@ -393,13 +455,21 @@ def recovery_sync_audit(limit: int = 20) -> dict:
             }
         )
 
-    return {
+    result = {
         "project_root": str(PROJECT_ROOT),
         "commit_count": len(rows),
         "recovery_missing_count": recovery_missing,
         "todo_missing_count": todo_missing,
         "commits": rows,
     }
+    snapshot = _record_snapshot(
+        "recovery_sync_audit",
+        result,
+        title=f"recovery sync audit limit={limit}",
+    )
+    if snapshot is not None:
+        result["snapshot_recorded"] = snapshot
+    return result
 
 
 def refactor_checkpoint(top_n: int = 10, line_limit: int = KT_LIMIT) -> dict:
@@ -411,7 +481,7 @@ def refactor_checkpoint(top_n: int = 10, line_limit: int = KT_LIMIT) -> dict:
     if len(assemble_output) > 4000:
         assemble_output = assemble_output[-4000:]
 
-    return {
+    result = {
         "project_root": str(PROJECT_ROOT),
         "branch": _parse_branch_name(status_payload["status"]),
         "git_status": status_payload["status"],
@@ -424,3 +494,11 @@ def refactor_checkpoint(top_n: int = 10, line_limit: int = KT_LIMIT) -> dict:
             "output_tail": assemble_output,
         },
     }
+    snapshot = _record_snapshot(
+        "refactor_checkpoint",
+        result,
+        title=f"refactor checkpoint top_n={top_n} limit={line_limit}",
+    )
+    if snapshot is not None:
+        result["snapshot_recorded"] = snapshot
+    return result

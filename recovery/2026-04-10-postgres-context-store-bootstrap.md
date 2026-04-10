@@ -75,6 +75,7 @@
   - env-driven `DBSettings`
   - `DBRepository`
   - прямые параметризованные SQL-запросы вместо shell transport
+- `phototrap-tools` начал переиспользовать тот же `DBRepository` из `context-tools`, а audit tools теперь автоматически сохраняют результаты в `ai_context.snapshots`.
 
 ## verification_status
 
@@ -116,6 +117,10 @@
   - успешно вернул укороченный low-token status для быстрого rehydrate
 - `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py kb-get-active-tasks Photo_Trap`
   - успешно вытащил активные задачи из `TODO.md` и current recovery next steps без чтения всего backlog
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 4`
+  - успешно записал snapshot `safe_split_audit` в `ai_context.snapshots`
+- `/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/context_tools/cli.py context-list-snapshots Photo_Trap --snapshot-type safe_split_audit --limit 4`
+  - сразу увидел свежий snapshot из предыдущего audit run
 - `codex exec` с явной инструкцией использовать только `context_list_snapshots`
   - успешно выполнил MCP tool call к `context-tools` и вернул, что для `Photo_Trap` уже есть `2` snapshots типа `safe_split_audit`
 - Повторная `codex exec` проверка для `kb_get_project_overview`
@@ -144,6 +149,10 @@
   - `phototrap_module_seam_check`
 - Добавить более компактную версию `kb_project_status`, чтобы большие поля можно было получать отдельно, а status оставался коротким bootstrap-ответом.
 - Подчистить `focus` в `kb_project_status_compact`: сейчас туда попадают первые строки `current_state`, но они еще излишне repo-oriented.
+- Аналогично привязать автосохранение snapshot для:
+  - `phototrap_refactor_checkpoint`
+  - `phototrap_recovery_sync_audit`
+  - `phototrap_module_seam_check`
 - Добавить query-tools поверх `pg_trgm` и `documents`.
 - Сжать extraction-логику для `next_steps` и `state_summary`, чтобы в projection не попадали лишние markdown-заголовки.
 - При желании потом вынести этот DB-слой в общий `ai/mcp/db_runtime`, чтобы его могли переиспользовать и другие MCP servers.

@@ -4,6 +4,8 @@
 
 Этот шаг дает отдельные инструменты проекта, чтобы не ходить к нему через общий shell каждый раз.
 
+Аудит-инструменты теперь автоматически сохраняют свои результаты в `ai_context.snapshots`, чтобы повторный заход в проект не требовал каждый раз заново пересчитывать одни и те же отчеты.
+
 Сейчас слой состоит из двух частей:
 
 - `tools.py` и `cli.py` для локальной проверки;
@@ -25,10 +27,10 @@
 ```bash
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-status
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-recovery
-python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 10
-python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 8
-python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-recovery-sync-audit --limit 12
-python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-module-seam-check --top-n 10
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-safe-split-audit --top-n 10
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-refactor-checkpoint --top-n 8
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-recovery-sync-audit --limit 12
+/home/japonamat/ai/mcp/.venv/bin/python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-module-seam-check --top-n 10
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-search-code cleanup --limit 5
 python3 /home/japonamat/ai/mcp/phototrap_tools/cli.py phototrap-read-file app/src/main/java/com/cmdrjaponamat/phototrap/camera/MediaIndexRepository.kt
 ```

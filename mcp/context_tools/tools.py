@@ -95,7 +95,7 @@ def record_snapshot(
     title: str | None = None,
 ) -> dict[str, str | int]:
     project = get_project(project_name)
-    row = REPOSITORY.fetch_one(
+    row = REPOSITORY.execute_returning_one(
         """
         insert into snapshots (project_id, snapshot_type, title, payload)
         values (%s, %s, %s, %s::jsonb)
