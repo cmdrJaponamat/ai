@@ -1,6 +1,6 @@
 # Project Contexts
 
-Date updated: 2026-03-26
+Date updated: 2026-04-11
 Owner: japonamat
 
 This file is the registry of project-specific recovery/context files.
@@ -14,6 +14,7 @@ Rules:
 
 ## Entries
 
+- `ai-control-plane` | path: `/home/japonamat/ai` | recovery: `/home/japonamat/ai/.ai-recovery.md`
 - `dotfiles` | path: `/home/japonamat/dotfiles` | recovery: `/home/japonamat/dotfiles/.ai-recovery.md`
 - `db` | path: `/home/japonamat/study/JS/DB/db` | recovery: `/home/japonamat/study/JS/DB/db/.ai-recovery.md`
 - `amur` | path: `/home/japonamat/study/c++/amur` | recovery: `/home/japonamat/study/c++/amur/.ai-recovery.md`
