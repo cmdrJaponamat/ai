@@ -58,22 +58,41 @@ The right half of a custom split keyboard is soldered and needs RMK firmware too
 - `vial.json` passes `jq empty`.
 - `cargo make build` in the generated project passes.
 
-## Blocker
+## Current Blocker
 
-`cargo make uf2 --release` requires `cargo-binutils` and `cargo-hex-to-uf2`. The assistant sandbox cannot install them because DNS resolution for `index.crates.io` fails there.
+The UF2 now builds and flashes, but the RMK application does not enumerate as USB after reset.
+
+Observed on 2026-04-15:
+
+- `cargo make build` passes.
+- `cargo make uf2 --release` passes with the installed cargo helpers.
+- `Split_Keyboard_Right_Test.uf2` copies to `/media/admin-al/NICENANO/` and `sync` completes.
+- The `NICENANO` bootloader volume disappears after reset, so the bootloader accepts the UF2.
+- No USB device with VID/PID `4c4b:534c` appears.
+- No input device matching `Split`, `RMK`, `Vial`, `Right`, `4c4b`, or `534c` appears in `/proc/bus/input/devices`.
+- `dmesg` requires elevated access; `journalctl -k` shows no entries to the normal user.
+
+This points to an application-side early panic/hang before USB initialization, not a UF2 copy problem.
 
 ## Next Steps
 
-From a normal terminal:
+- Read kernel USB logs with elevated privileges:
+
+```bash
+sudo dmesg --ctime | tail -n 120
+```
+
+- Build the current firmware offline:
 
 ```bash
 cd /home/admin-al/split-keyboard-rmk/generated
 source "$HOME/.cargo/env"
-cargo install cargo-binutils cargo-hex-to-uf2
-cargo make uf2 --release
+CARGO_NET_OFFLINE=true cargo make build
+CARGO_NET_OFFLINE=true cargo make uf2 --release
 ```
 
-Then copy `Split_Keyboard_Right_Test.uf2` to the controller bootloader USB drive.
+- Put the controller into bootloader and copy `Split_Keyboard_Right_Test.uf2` to the `NICENANO` drive.
+- If it still does not enumerate, create a narrower diagnostic firmware to isolate BLE/storage vs matrix/pin init vs RMK startup.
 
 ## Verification
 
@@ -81,7 +100,9 @@ Then copy `Split_Keyboard_Right_Test.uf2` to the controller bootloader USB drive
 - RMK can parse chip and project name from `keyboard.toml`.
 - `vial.json` is valid JSON.
 - Firmware build passes.
-- UF2 generation is pending on installing the two cargo helper tools in a normal terminal.
+- UF2 generation passes.
+- Flash copy passes.
+- USB application enumeration fails after reset.
 
 ## Rollback
 
