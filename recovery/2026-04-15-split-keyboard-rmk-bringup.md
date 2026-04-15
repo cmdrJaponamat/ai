@@ -58,9 +58,9 @@ The right half of a custom split keyboard is soldered and needs RMK firmware too
 - `vial.json` passes `jq empty`.
 - `cargo make build` in the generated project passes.
 
-## Current Blocker
+## Current Status
 
-The UF2 now builds and flashes, but the RMK application does not enumerate as USB after reset.
+The USB-only RMK firmware now builds, flashes, and enumerates as USB HID after reset.
 
 Observed on 2026-04-15:
 
@@ -68,21 +68,20 @@ Observed on 2026-04-15:
 - `cargo make uf2 --release` passes with the installed cargo helpers.
 - `Split_Keyboard_Right_Test.uf2` copies to `/media/admin-al/NICENANO/` and `sync` completes.
 - The `NICENANO` bootloader volume disappears after reset, so the bootloader accepts the UF2.
-- No USB device with VID/PID `4c4b:534c` appears.
-- No input device matching `Split`, `RMK`, `Vial`, `Right`, `4c4b`, or `534c` appears in `/proc/bus/input/devices`.
-- `dmesg` requires elevated access; `journalctl -k` shows no entries to the normal user.
+- USB device appears as `4c4b:534c admin-al | Split Keyboard Right Test`.
+- `/proc/bus/input/devices` shows `admin-al Split Keyboard Right Test` plus mouse, consumer control, and system control interfaces.
 
-This points to an application-side early panic/hang before USB initialization, not a UF2 copy problem.
+Previous BLE/MPSL-enabled builds flashed but did not enumerate. A separate minimal `usb_probe.uf2` did enumerate as `4c4b:5350 admin-al | USB Probe`, proving that the bootloader, flash offset, and USB hardware path are good. The current working diagnostic firmware disables BLE and storage.
+
+Local cargo registry patch required for the USB-only build:
+
+- File: `/home/admin-al/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rmk-macro-0.7.1/src/bind_interrupt.rs`
+- Change: `unwrap_or(...)` to `unwrap_or_else(...)` in `expand_bind_interrupt`
+- Reason: without lazy fallback, the default nRF52 BLE/MPSL interrupt builder is evaluated even when a `#[bind_interrupt]` override exists, causing a panic in USB-only mode.
 
 ## Next Steps
 
-- Read kernel USB logs with elevated privileges:
-
-```bash
-sudo dmesg --ctime | tail -n 120
-```
-
-- Build the current firmware offline:
+- Build the current USB-only firmware offline:
 
 ```bash
 cd /home/admin-al/split-keyboard-rmk/generated
@@ -92,7 +91,8 @@ CARGO_NET_OFFLINE=true cargo make uf2 --release
 ```
 
 - Put the controller into bootloader and copy `Split_Keyboard_Right_Test.uf2` to the `NICENANO` drive.
-- If it still does not enumerate, create a narrower diagnostic firmware to isolate BLE/storage vs matrix/pin init vs RMK startup.
+- Verify the right-half matrix by pressing keys and checking the emitted keycodes.
+- Reintroduce BLE/split behavior only after the USB matrix test is correct.
 
 ## Verification
 
@@ -102,7 +102,7 @@ CARGO_NET_OFFLINE=true cargo make uf2 --release
 - Firmware build passes.
 - UF2 generation passes.
 - Flash copy passes.
-- USB application enumeration fails after reset.
+- USB application enumeration passes in USB-only mode.
 
 ## Rollback
 
