@@ -1,16 +1,16 @@
 # Split Keyboard RMK Bring-Up
 
 Date: 2026-04-15
-Scope: RMK firmware bring-up for a handwired split keyboard left half
+Scope: RMK firmware bring-up for a handwired split keyboard right half
 
 ## Problem
 
-The left half of a custom split keyboard is soldered and needs RMK firmware tooling plus an initial smoke-test firmware.
+The right half of a custom split keyboard is soldered and needs RMK firmware tooling plus an initial smoke-test firmware.
 
 ## Findings
 
 - Controller: SuperMini / Pro Micro-compatible nRF52840.
-- Left half matrix: 5 rows x 7 columns.
+- Right half matrix: 5 rows x 7 columns.
 - Diodes are on rows; initial assumption is `col2row`.
 - Rows, top to bottom:
   - D2 = P0.17
@@ -34,7 +34,8 @@ The left half of a custom split keyboard is soldered and needs RMK firmware tool
   - `/home/admin-al/split-keyboard-rmk/keyboard.toml`
   - `/home/admin-al/split-keyboard-rmk/vial.json`
   - `/home/admin-al/split-keyboard-rmk/README.md`
-- Configured a diagnostic 5x7 left-half keymap for matrix testing.
+- Configured a 5x7 right-half keymap derived from the KLE JSON.
+- Corrected the initial mistaken left-half diagnostic keymap to right-half base keys: `6 7 8 9 0`, `Y U I O P [ ]`, `H J K L ; ' \`, `N M , . /`, plus `Backspace`, `MO(1)`, `Enter`, and `LGui`.
 
 ## Toolchain State
 
@@ -48,7 +49,7 @@ The left half of a custom split keyboard is soldered and needs RMK firmware tool
   - `flip-link` installed
   - `dfu-util 0.11` installed
 - `rmkit get-chip --keyboard-toml-path keyboard.toml` returns `nrf52840`.
-- `rmkit get-project-name --keyboard-toml-path keyboard.toml` returns `Split_Keyboard_Left_Test`.
+- `rmkit get-project-name --keyboard-toml-path keyboard.toml` returns `Split_Keyboard_Right_Test`.
 - `vial.json` passes `jq empty`.
 
 ## Blocker
@@ -65,7 +66,7 @@ source "$HOME/.cargo/env"
 rmkit create --keyboard-toml-path keyboard.toml --vial-json-path vial.json --target-dir generated
 ```
 
-Then inspect generated build instructions and build the left-half smoke-test firmware.
+Then inspect generated build instructions and build the right-half smoke-test firmware.
 
 ## Verification
 
