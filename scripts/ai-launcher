@@ -1,0 +1,339 @@
+#!/usr/bin/env python3
+"""
+ai-launcher - Unified MCP-first launcher for AI tools (Codex & Kimi).
+
+Features:
+- Single hotkey (Mod+Shift+A) opens rofi with tool selection
+- Then project selection from SQLite projects.db
+- MCP-first approach: project passed as metadata, recovery NOT inlined
+- Launches selected tool in alacritty with project context
+"""
+
+import json
+import os
+import sqlite3
+import subprocess
+import tempfile
+from pathlib import Path
+from shutil import which
+
+
+HOME = Path.home()
+AI_DIR = HOME / "ai"
+RULES_PATH = AI_DIR / "RULES.json"
+PROJECT_DB_PATH = AI_DIR / "projects.db"
+ROFI_THEME_PATH = HOME / ".config" / "rofi" / "launchers" / "type-2" / "style-2.rasi"
+
+# Available AI tools
+TOOLS = {
+    "codex": {
+        "name": "Codex (OpenAI)",
+        "cmd": "codex",
+        "env_var": "CODEX_RECOVERY_INLINE",
+    },
+    "kimi": {
+        "name": "Kimi (Moonshot)",
+        "cmd": "kimi",
+        "env_var": "KIMI_RECOVERY_INLINE",
+    },
+}
+
+
+def expand(path_str: str) -> Path:
+    return Path(os.path.expanduser(path_str))
+
+
+def append_file(parts: list[str], path: Path) -> None:
+    if path.is_file():
+        parts.append(f"\n===== {path} =====\n")
+        parts.append(path.read_text(encoding="utf-8"))
+        parts.append("\n")
+
+
+def resolve_tool_path(tool_name: str) -> str:
+    candidates: list[Path] = []
+    if tool_name == "kimi":
+        candidates.extend([
+            HOME / ".local" / "bin" / "kimi",
+            HOME / ".local" / "share" / "uv" / "tools" / "kimi-cli" / "bin" / "kimi",
+        ])
+    elif tool_name == "codex":
+        candidates.extend([
+            Path("/usr/bin/codex"),
+            HOME / ".local" / "bin" / "codex",
+        ])
+
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+
+    resolved = which(tool_name)
+    if resolved:
+        return resolved
+
+    raise FileNotFoundError(f"Не найден исполняемый файл для {tool_name}")
+
+
+def get_projects() -> list[dict[str, str]]:
+    if not PROJECT_DB_PATH.is_file():
+        return []
+    conn = sqlite3.connect(PROJECT_DB_PATH)
+    try:
+        rows = conn.execute(
+            "SELECT name, path, recovery_file FROM projects WHERE active = 1 ORDER BY name COLLATE NOCASE"
+        ).fetchall()
+    finally:
+        conn.close()
+    return [
+        {"name": name, "path": path, "recovery_file": recovery_file}
+        for name, path, recovery_file in rows
+    ]
+
+
+def detect_project_from_cwd(projects: list[dict[str, str]]) -> dict[str, str] | None:
+    cwd = Path.cwd().resolve()
+    matches: list[tuple[int, dict[str, str]]] = []
+    for project in projects:
+        project_path = Path(project["path"]).resolve()
+        try:
+            cwd.relative_to(project_path)
+        except ValueError:
+            continue
+        matches.append((len(project_path.parts), project))
+    if not matches:
+        return None
+    matches.sort(key=lambda item: item[0], reverse=True)
+    return matches[0][1]
+
+
+def rofi_select(options: list[tuple[str, any]], prompt: str) -> tuple[str, any] | None:
+    """Show rofi menu with options, return selected (label, value) or None if cancelled."""
+    try:
+        cmd = ["rofi", "-dmenu", "-i", "-p", prompt]
+        if ROFI_THEME_PATH.is_file():
+            cmd.extend(["-theme", str(ROFI_THEME_PATH)])
+        result = subprocess.run(
+            cmd,
+            input="\n".join(label for label, _ in options),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return None
+
+    if result.returncode != 0:
+        return None
+
+    selected = result.stdout.strip()
+    if not selected:
+        return None
+
+    for label, value in options:
+        if selected == label:
+            return (label, value)
+
+    return None
+
+
+def pick_tool() -> dict | None:
+    """Let user select AI tool via rofi."""
+    options = [(tool["name"], tool) for tool in TOOLS.values()]
+    result = rofi_select(options, "AI Tool")
+    return result[1] if result else None
+
+
+def pick_project() -> tuple[str, dict[str, str] | None]:
+    """Let user select project via rofi."""
+    projects = get_projects()
+    if not projects:
+        return ("launch", None)
+
+    auto_project = detect_project_from_cwd(projects)
+    choices: list[tuple[str, dict[str, str] | None]] = [("[Без проекта]", None)]
+    if auto_project:
+        choices.append((f"[Авто] {auto_project['name']}", auto_project))
+    choices.extend((project["name"], project) for project in projects)
+
+    result = rofi_select(choices, "Проект")
+    if result is None:
+        return ("abort", None)
+    return ("launch", result[1])
+
+
+def build_prompt(tool: dict, project: dict[str, str] | None) -> str:
+    rules = json.loads(RULES_PATH.read_text(encoding="utf-8"))
+    sources = rules["sources"]
+    language = rules["language"]
+    style = rules["style"]
+    context_loading = rules["context_loading"]
+    project_policy = rules["project_policy"]
+    git_policy = rules["git_policy"]
+    system_work = rules["system_work"]
+
+    tool_name = "Codex" if tool["cmd"] == "codex" else "Kimi"
+
+    lines: list[str] = [
+        f"Ты запускаешь новую терминальную сессию {tool_name} для пользователя {rules['owner']}.",
+        "",
+        "Стартовые правила собраны программно из RULES.json.",
+        "",
+        "Обязательные правила:",
+        f"- Всегда работай на {language['default']} языке, если пользователь явно не попросил другое."
+        if language["strict_default"]
+        else f"- Язык по умолчанию: {language['default']}.",
+        "- Не смешивай русский и английский без необходимости."
+        if language["avoid_mixed_language"]
+        else "- Избегай смешения языков без необходимости.",
+        "- Отвечай кратко, практично и по делу."
+        if style["concise"] and style["practical"] and style["action_oriented"]
+        else "- Стиль ответа определяется RULES.json.",
+        f"- Считай {sources['primary_control_plane']} главным источником постоянных правил и recovery-контекста.",
+        f"- Считай {sources['primary_control_plane']} operational control plane для system work вне обычных проектных репозиториев.",
+        f"- Используй {sources['project_registry']} как индекс проектов и recovery-файлов.",
+        f"- Учитывай, что {sources['project_index_db']} является индексом проектов, а не главным хранилищем контекста.",
+        f"- Сначала используй {sources['system_inventory_json']} как источник сведений о пакетах, версиях, бинарях и user services.",
+        "- Если инвентарь системы свежий, не перепроверяй повторно установку и версии пакетов без необходимости."
+        if system_work["system_inventory_is_primary_for_package_checks"] and system_work["avoid_rechecking_packages_if_inventory_is_fresh"]
+        else "- Политика работы с инвентарем системы определяется RULES.json.",
+        f"- Учитывай TTL inventory: package_versions={system_work['inventory_ttl_hours']['package_versions']}ч, user_services={system_work['inventory_ttl_hours']['user_services']}ч, tool_paths={system_work['inventory_ttl_hours']['tool_paths']}ч.",
+        "- Если inventory invalidated или явно stale, не доверяй ему слепо даже до истечения TTL.",
+        "- Перепроверяй точечно только если нужная секция inventory протухла, inventory invalidated, пользователь явно просит проверить, задача чувствительна к версии или есть признаки изменений среды.",
+        "- Не загружай автоматически все project context/recovery файлы сразу."
+        if context_loading["do_not_load_all_project_contexts_by_default"]
+        else "- Массовая загрузка project context не запрещена.",
+        "- Сначала смотри индекс проектов, потом загружай только релевантный проектный контекст."
+        if context_loading["check_registry_first"] and context_loading["load_only_relevant_project_context"]
+        else "- Работай с project context по ситуации.",
+        "- Если непонятно, какой проектный контекст нужен, задай короткий уточняющий вопрос."
+        if context_loading["ask_if_project_context_is_ambiguous"]
+        else "- При неопределенности проектного контекста действуй по ситуации.",
+        "- Выбирай минимально достаточный контекст для задачи."
+        if context_loading["prefer_minimal_sufficient_context"]
+        else "- Объем контекста определяй самостоятельно.",
+        f"- Проектом считается каталог с .git и remote owner {project_policy['project_definition']['requires_remote_owner']}.",
+        "- При создании нового проекта сразу создавай project-root/.ai-recovery.md и регистрируй его в индексе."
+        if project_policy["recovery_file"]["required_on_project_creation"] and project_policy["registry_update_required"]
+        else "- Требования к recovery-файлам проекта определяются RULES.json.",
+        "- Если работа идет внутри git-репозитория, приоритетом являются дискретные коммиты завершенных изменений."
+        if git_policy["commit_discrete_completed_changes"]
+        else "- Git-правила определяются RULES.json.",
+        "- Перед коммитом проверяй изменения и не смешивай несвязанные правки."
+        if git_policy["verify_changes_before_commit"] and git_policy["do_not_bundle_unrelated_changes"]
+        else "- Проверка коммитов определяется RULES.json.",
+        "- Если git-репозитория нет, сначала спроси пользователя, нужно ли его создать."
+        if git_policy["ask_before_git_init_if_missing"] and git_policy["do_not_init_git_silently"]
+        else "- Политика инициализации git определяется RULES.json.",
+        "- Для system work обязательно оставляй запись в actions.log и recovery trail."
+        if system_work["enabled"] and system_work["always_log_to_actions_log"] and system_work["nontrivial_changes_require_recovery_note"]
+        else "- Правила system work определяются RULES.json.",
+        "- Для каждого системного изменения фиксируй: что изменено, зачем, как проверено, как откатить, нужен ли relogin/reboot.",
+        "",
+        "=== MCP-FIRST APPROACH ===",
+        "- Используй MCP tools для получения project recovery и контекста по необходимости.",
+        "- Не запрашивай полный recovery файл сразу — только минимально необходимый контекст.",
+        "- Для чтения recovery используй: ai_mcp_read_recovery (project_name)",
+        "- Для статуса проекта используй: ai_mcp_status, kb_project_status, kb_get_project_state",
+        "",
+    ]
+
+    # MCP-first: project name as metadata, recovery NOT inlined
+    if project:
+        lines.extend([
+            f"Project: {project['name']}",
+            f"Path: {project['path']}",
+            f"Recovery: {project['recovery_file']}",
+            "",
+            "Проект выбран. Используй MCP tools для получения recovery-контекста при необходимости.",
+            "",
+        ])
+    else:
+        lines.extend([
+            "Project: (none)",
+            "",
+            "Проект не выбран. Используй общий индекс проектов и подгружай project-specific контекст по необходимости.",
+            "",
+        ])
+
+    lines.append("Ниже подключены основные файлы bootstrap-контекста.")
+
+    parts = ["\n".join(lines)]
+    append_file(parts, expand(sources["workflow_file"]))
+    append_file(parts, AI_DIR / "ASSISTANT_BOOTSTRAP.md")
+    append_file(parts, expand(sources["project_registry"]))
+    append_file(parts, expand(sources["system_inventory_human"]))
+    append_file(parts, expand(sources["system_inventory_json"]))
+    
+    # Fallback: inline recovery if TOOL_RECOVERY_INLINE=1
+    if project and os.environ.get(tool["env_var"]) == "1":
+        parts.append("\n===== Project Recovery (inlined) =====\n")
+        append_file(parts, Path(project["recovery_file"]))
+    
+    append_file(parts, RULES_PATH)
+    return "".join(parts)
+
+
+def launch_tool(tool: dict, project: dict[str, str] | None, prompt_path: str) -> int:
+    """Launch the selected AI tool in alacritty."""
+    working_dir = project["path"] if project else str(HOME)
+    alacritty_cmd = [
+        "alacritty",
+        "--working-directory",
+        working_dir,
+        "--command",
+    ]
+
+    if tool["cmd"] == "codex":
+        prompt_text = Path(prompt_path).read_text(encoding="utf-8")
+        cmd = alacritty_cmd + [
+            resolve_tool_path("codex"),
+            "-C",
+            working_dir,
+            "-m",
+            "gpt-5.4",
+            "-c",
+            "model_reasoning_effort='low'",
+            "-c",
+            f'projects."{working_dir}".trust_level="trusted"',
+            prompt_text,
+        ]
+    else:
+        cmd = alacritty_cmd + [
+            resolve_tool_path("kimi"),
+            "--context",
+            prompt_path,
+        ]
+
+    return subprocess.call(cmd)
+
+
+def main() -> int:
+    # Step 1: Select AI tool
+    tool = pick_tool()
+    if tool is None:
+        return 0
+
+    # Step 2: Select project
+    action, project = pick_project()
+    if action == "abort":
+        return 0
+
+    # Step 3: Build prompt
+    prompt = build_prompt(tool, project)
+    
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False, suffix=".md") as tmp:
+        tmp.write(prompt)
+        tmp_path = tmp.name
+
+    # Step 4: Launch tool
+    try:
+        return launch_tool(tool, project, tmp_path)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except FileNotFoundError:
+            pass
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
