@@ -14,6 +14,11 @@ Codex needs to work with existing Kanban AI tools through MCP instead of directl
   - `kanban-ai`
 - Codex config changed:
   - `/home/admin-al/.codex/config.toml`
+- Added startup timeout:
+  - `startup_timeout_sec = 60`
+- Adjusted MCP initialize handshake:
+  - returns the client-requested `protocolVersion`
+  - declares `tools.listChanged = false`
 - A timestamped backup of the Codex config was created before registration:
   - `/home/admin-al/.codex/config.toml.bak-kanban-mcp-*`
 
@@ -38,10 +43,11 @@ Codex needs to work with existing Kanban AI tools through MCP instead of directl
 Passed:
 
 - Direct MCP `initialize` request.
+- Direct MCP `initialize` request with `protocolVersion: 2025-06-18` returned the same protocol version in about 0.1 seconds.
 - Direct MCP `tools/list` request.
 - Direct MCP `tools/call` for `kanban_board_summary`.
 - `codex mcp list` shows `kanban-ai` enabled.
-- `codex mcp get kanban-ai` shows stdio command path.
+- `codex mcp get kanban-ai` shows stdio command path and `startup_timeout_sec: 60`.
 
 Incomplete:
 
