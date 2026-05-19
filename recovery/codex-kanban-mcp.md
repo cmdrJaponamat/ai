@@ -19,6 +19,7 @@ Codex needs to work with existing Kanban AI tools through MCP instead of directl
 - Adjusted MCP initialize handshake:
   - returns the client-requested `protocolVersion`
   - declares `tools.listChanged = false`
+- Later removed the global `kanban-ai` MCP registration because Codex CLI 0.131.0 still timed out on stdio startup and blocked session startup.
 - A timestamped backup of the Codex config was created before registration:
   - `/home/admin-al/.codex/config.toml.bak-kanban-mcp-*`
 
@@ -49,14 +50,22 @@ Passed:
 - `codex mcp list` shows `kanban-ai` enabled.
 - `codex mcp get kanban-ai` shows stdio command path and `startup_timeout_sec: 60`.
 
-Incomplete:
+Later diagnostic result:
 
-- `codex exec` smoke check started but did not produce final output in the allotted wait. No related process remained running after the check.
+- Direct MCP protocol tests still pass.
+- TUI/PTTY diagnostics show Codex starts the MCP process, but sends no bytes to the server stdin before timing out.
+- The same behavior remains after explicit `/usr/bin/python3`, explicit `cwd`, `startup_timeout_sec = 60`, and `--disable apps`.
+- `npm view @openai/codex version` showed `0.131.0`, same as installed.
+
+Current state:
+
+- `kanban-ai` is not registered in `~/.codex/config.toml`.
+- `codex mcp list` reports no MCP servers configured.
+- The MCP server file is kept in `/home/admin-al/assistant/mcp/kanban_ai_mcp.py` for future retest or HTTP MCP service conversion.
 
 ## Rollback
 
 ```bash
-codex mcp remove kanban-ai
 cp /home/admin-al/.codex/config.toml.bak-kanban-mcp-YYYYMMDD-HHMMSS /home/admin-al/.codex/config.toml
 ```
 
