@@ -51,6 +51,10 @@ manual server-side operation without a repeatable health-check or rollback.
   text on a dark panel. Favicon, Apple Touch Icon and PWA icons are regenerated
   from the approved 2026 vertical mark; PWA metadata uses `#002FFF` and
   `#F7F8FC`.
+- Deploy `250edda4baec4350d6f36474bdb2854cd40fc09f` adds transparent monochrome
+  browser favicon assets. The document selects black for light browser chrome
+  and white for dark browser chrome through `prefers-color-scheme`; a transparent
+  black ICO remains as a legacy fallback.
 
 ## Rollback
 
