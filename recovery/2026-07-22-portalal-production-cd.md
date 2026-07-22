@@ -42,6 +42,16 @@ manual server-side operation without a repeatable health-check or rollback.
 - Exact `Graphik LCG` web-font files were not present in the supplied brandbook
   directory; obtain licensed `.ttf/.otf` files before final typography alignment.
 
+## Follow-up: contrast and icon correction
+
+- Deploy `8ccb26b3bfc53db890b734011f69ac579aac2fd2` uses the approved horizontal
+  monochrome PDF converted directly to SVG for the dark header, then renders it
+  white. This avoids the quality loss from the temporary 172-pixel PNG.
+- The dark-home heading explicitly uses the light theme token, fixing its black
+  text on a dark panel. Favicon, Apple Touch Icon and PWA icons are regenerated
+  from the approved 2026 vertical mark; PWA metadata uses `#002FFF` and
+  `#F7F8FC`.
+
 ## Rollback
 
 For one portal release, in `/opt/portal-al` select the previous local image and
