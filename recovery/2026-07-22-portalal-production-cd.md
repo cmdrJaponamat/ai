@@ -77,6 +77,9 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `45705ea4a40319d23f54bf14b6eb9d2cc3867b30` applies the same branded
   logo panel in the light theme, removing the remaining pale decorative login
   panel and white-background logo treatment.
+- Deploy `975f03645afe3159aee2e6b7d03146a98c97883d` returns `authMode` and a
+  null user from `/api/auth/logout`; the frontend resets its page state and
+  renders the SSO authorization screen immediately after logout.
 
 ## Follow-up: IT Wiki links
 
