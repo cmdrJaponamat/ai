@@ -237,6 +237,25 @@
   role-based policy. До live write-доступа на устройство не применять
   настройки по архивному export.
 
+### AL-NU: подготовка primary OVPN до AL-OBIT (22.07.2026)
+
+- Целевая роль транспорта уточнена: прямой OVPN AL-NU → AL-OBIT является
+  primary; прямой WireGuard и legacy OVPN AL-NU → AL-MMK остаются резервными.
+  Ранее созданный WireGuard временно продолжает нести прямую связность и не
+  удалялся.
+- На AL-OBIT создан отдельный PPP profile и secret `ovpn-nu-primary` с
+  выделенным S2S `/30` `10.252.14.1` ↔ `10.252.14.2`. На момент проверки нет
+  active PPP session и маршрутов через этот профиль, поэтому production
+  трафик не изменён. Учётный секрет хранится лишь в ignored локальном Ansible
+  vault.
+- Прямой SSH к AL-NU с рабочей станции сейчас timeout; client OVPN и
+  переключение маршрутов намеренно не выполнялись без живого management
+  path. После восстановления доступа: создать OVPN client на AL-NU,
+  подтвердить PPP active и взаимный ICMP, добавить primary routes на DC/NU,
+  только затем понизить WireGuard/legacy OVPN до reserve distance.
+- Откат server-side подготовки: на AL-OBIT удалить только secret и profile
+  `ovpn-nu-primary`; существующие WG, legacy OVPN и маршруты не затрагивать.
+
 ## Проверки
 
 - Контейнер `portal-al` healthy после rebuild.
