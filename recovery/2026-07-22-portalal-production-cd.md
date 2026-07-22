@@ -91,6 +91,11 @@ manual server-side operation without a repeatable health-check or rollback.
   - Zabbix: `https://zabbix.aurora-logistics.ru/`
 - Production static-catalog readback confirms all four entries have
   `visibleFor: ["admin"]`.
+- The portal uses a persisted PostgreSQL `content-store` overlay. On the first
+  deploy, its baseline/catalog predated the new JSON and hid the entries. The
+  four missing IDs were appended to both branches without resetting any other
+  managed-content changes; a repository readback for role `admin` confirms all
+  four are now returned to the UI.
 
 ## Follow-up: IT Wiki links
 
