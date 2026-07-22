@@ -65,6 +65,9 @@ manual server-side operation without a repeatable health-check or rollback.
   variant with the approved black-and-white vertical mark from the brandbook's
   vector PDF. The favicon assets crop only the mark viewport; no custom graphic
   element is present.
+- Deploy `8f9ae1acd02864e6201c463052f88999a280e742` applies `color: var(--ink)`
+  at the application root. This fixes inherited black text across dark cards,
+  section titles and page headers while preserving component-specific colors.
 
 ## Rollback
 
