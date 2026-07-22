@@ -72,6 +72,22 @@ manual server-side operation without a repeatable health-check or rollback.
   `favicon-brandbook-light.svg` and `favicon-brandbook-dark.svg` instead of
   reused favicon URLs, forcing clients to fetch the approved vector artwork.
 
+## Follow-up: IT Wiki links
+
+- Deploy `3e633e98d46c6c04cbec3353d777f52450fed2a3` updates the protected
+  portal section «ИТ: база знаний» to the canonical `/ru/it` Wiki route and
+  expands it to 28 cards. New cards include the equipment registry, data
+  center and network equipment, corporate gateways, workplaces, print, VKS,
+  specialised equipment, four documented site networks and the WAN registry.
+- `scripts/seed-it-knowledge.mjs` preserves manual titles, descriptions and
+  other card fields: it updates only canonical Wiki URLs for known cards and
+  appends missing IT cards. The deploy script now runs this seed after a
+  successful health-check. The runtime image includes the generated bootstrap
+  catalog required by the seed.
+- Verified directly in the production managed store: 28 IT cards and the
+  `/ru/it` section URL are present; equipment, gateway, Milionnaya and WAN
+  links resolve to their intended Wiki paths.
+
 ## Rollback
 
 For one portal release, in `/opt/portal-al` select the previous local image and
