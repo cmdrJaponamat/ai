@@ -74,6 +74,9 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `fcd7d72fe6abaa79e82b3d117156700d8744d417` switches the dark login
   screen to the approved monochrome horizontal vector logo. Its brand panel uses
   a blue-to-graphite gradient and no longer renders the former green accent mark.
+- Deploy `45705ea4a40319d23f54bf14b6eb9d2cc3867b30` applies the same branded
+  logo panel in the light theme, removing the remaining pale decorative login
+  panel and white-background logo treatment.
 
 ## Follow-up: IT Wiki links
 
