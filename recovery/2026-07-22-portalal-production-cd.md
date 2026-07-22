@@ -71,6 +71,9 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `ec2580bcbceaa290fbacb6b336feb4ae0dc2da94` references
   `favicon-brandbook-light.svg` and `favicon-brandbook-dark.svg` instead of
   reused favicon URLs, forcing clients to fetch the approved vector artwork.
+- Deploy `fcd7d72fe6abaa79e82b3d117156700d8744d417` switches the dark login
+  screen to the approved monochrome horizontal vector logo. Its brand panel uses
+  a blue-to-graphite gradient and no longer renders the former green accent mark.
 
 ## Follow-up: IT Wiki links
 
