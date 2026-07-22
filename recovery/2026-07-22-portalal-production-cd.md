@@ -81,6 +81,17 @@ manual server-side operation without a repeatable health-check or rollback.
   null user from `/api/auth/logout`; the frontend resets its page state and
   renders the SSO authorization screen immediately after logout.
 
+## Follow-up: administrative services
+
+- Deploy `2ea0f900448accd9d68de9dad1706d4f80e0a83f` adds the following
+  admin-only catalog links:
+  - Oxidized production: `http://10.78.3.70:8888/prod/nodes`
+  - KSMG: `https://10.78.3.155/ru_RU/#/rules`
+  - Kaspersky Security Center: `https://ksc.aurora-logistics.ru:8080/`
+  - Zabbix: `https://zabbix.aurora-logistics.ru/`
+- Production static-catalog readback confirms all four entries have
+  `visibleFor: ["admin"]`.
+
 ## Follow-up: IT Wiki links
 
 - Deploy `3e633e98d46c6c04cbec3353d777f52450fed2a3` updates the protected
