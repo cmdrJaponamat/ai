@@ -122,6 +122,10 @@ manual server-side operation without a repeatable health-check or rollback.
   slots for title, description, technical metadata, owner and actions across
   services, employees, news, offices and departments. Empty slots remain in
   place; preview text is line-clamped so card levels stay aligned.
+- Deploy `6c29026` limits the full technical/action slot reservation to
+  administrative-service cards. Ordinary service cards reserve the two-line
+  title level and bottom owner link, but remain compact when they do not have
+  technical metadata or a secondary action.
 
 ## Rollback
 
