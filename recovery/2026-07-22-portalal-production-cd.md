@@ -68,6 +68,9 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `8f9ae1acd02864e6201c463052f88999a280e742` applies `color: var(--ink)`
   at the application root. This fixes inherited black text across dark cards,
   section titles and page headers while preserving component-specific colors.
+- Deploy `ec2580bcbceaa290fbacb6b336feb4ae0dc2da94` references
+  `favicon-brandbook-light.svg` and `favicon-brandbook-dark.svg` instead of
+  reused favicon URLs, forcing clients to fetch the approved vector artwork.
 
 ## Rollback
 
