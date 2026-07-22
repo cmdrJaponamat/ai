@@ -118,6 +118,10 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `3193a705700b7295f20e0b607e9781d2c8b7ee44` groups cards after
   search/filtering into network/access, compute/storage, information security,
   monitoring and other administrative systems. Empty groups are not rendered.
+- Deploy `220fadf58ce70cafdf7ad5a8cff32c7e256c31ca` defines fixed card-preview
+  slots for title, description, technical metadata, owner and actions across
+  services, employees, news, offices and departments. Empty slots remain in
+  place; preview text is line-clamped so card levels stay aligned.
 
 ## Rollback
 
