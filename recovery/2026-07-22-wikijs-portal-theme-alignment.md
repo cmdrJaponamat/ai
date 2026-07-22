@@ -47,6 +47,21 @@
 - Корпоративный знак использует исходный кликабельный контейнер Wiki.js;
   переход на главную по знаку сохранен.
 
+## Follow-up: brandbook 2026 light/dark themes
+
+- Source commit `a2fb158` replaces the retired primary/teal tokens with
+  `#002FFF` (primary), `#B1D1F5` (secondary) and `#D4D3D5` (metal).
+- Light mode uses the refreshed blue palette for the header underline,
+  navigation state, headings, links and notes. The injected corporate mark now
+  comes from the approved 2026 portal asset rather than the legacy PWA icon.
+- Explicit `.v-application.theme--dark` rules set dark reading surfaces,
+  header, navigation, fields, cards, tables, blockquotes, links and footer to
+  contrast-safe blue/graphite values. The verifier now requires the dark-mode
+  marker in live `injectCSS`.
+- The supplied brandbook does not contain licensed Graphik LCG web-font files;
+  Wiki.js continues to use the existing Cera Pro/Akrobat fonts until they are
+  provided.
+
 ## Откат
 
 Вернуть в `aurora-wiki.css` предыдущие значения `#2e63ae`, `#214d8c`,
