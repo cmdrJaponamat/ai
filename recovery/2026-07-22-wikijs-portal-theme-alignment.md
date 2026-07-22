@@ -37,6 +37,10 @@
   возвращают HTTP 200.
 - HTML `/ru/it` содержит корпоративные favicon-метки, data URI знака и CSS
   знака в шапке.
+- Chromium screenshot подтверждает, что в шапке остался ровно один
+  корпоративный знак: штатный logo Wiki.js скрыт.
+- В rendered DOM favicon и manifest по умолчанию удаляются; остаются только
+  корпоративные `data-aurora-icon` ссылки и `theme-color: #2f5fa8`.
 
 ## Откат
 
@@ -48,6 +52,9 @@
 `.v-toolbar__title::before` и удалить блок между
 `aurora-corporate-icons:start/end` в `injectHead`, после чего снова применить
 тему.
+
+Если требуется вернуть штатный логотип Wiki.js, дополнительно убрать правило
+`.nav-header-inner .v-avatar.rounded-0`.
 
 ## Перезапуск
 
