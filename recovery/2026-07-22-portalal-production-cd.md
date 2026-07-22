@@ -61,6 +61,10 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `017267b93af987d699d4ca28e78fe4c95e103452` uses a transparent vector
   four-point variant for the browser favicon. It is selected black/white using
   `prefers-color-scheme` and is intended for legibility at 16×16 pixels.
+- Deploy `06e9c3aa9bce3aad7de112f3ae268f32c1f268b6` supersedes the experimental
+  variant with the approved black-and-white vertical mark from the brandbook's
+  vector PDF. The favicon assets crop only the mark viewport; no custom graphic
+  element is present.
 
 ## Rollback
 
