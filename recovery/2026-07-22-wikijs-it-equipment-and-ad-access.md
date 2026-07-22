@@ -280,6 +280,20 @@
   и `local-dhcp` обратно на `BRIDE-LOCAL`, затем отключить/удалить
   `vlan1400-users` и созданные bridge VLAN entries. Reboot не требуется.
 
+### AL-MMRP: подготовка VLAN 1510 для печати (22.07.2026)
+
+- Созданы `vlan1510-print-devices`, шлюз `10.11.51.1/24`, пул
+  `10.11.51.50–10.11.51.200`, DHCP `dhcp1510-print-devices` и объект
+  `SITE-PRINT-DEVICES` для будущей firewall-политики.
+- VLAN 1510 намеренно имеет только CPU-tagged membership на `BRIDE-LOCAL`:
+  он не выдан ни на один физический порт, не передаётся к GSP и не содержит
+  ни одного DHCP-клиента. Существующие принтеры остаются в VLAN 1400.
+- Перед изменением сохранены export и binary backup с префиксом
+  `pre-vlan1510-printers-20260722`.
+- Проверка: `AL-MMRP-1`, legacy OVPN и корпоративный DNS доступны; VLAN 3/4
+  продолжают работать. Откат: удалить только объекты с именем/комментарием
+  `1510-print-devices` или `SITE-PRINT-DEVICES`; reboot не требуется.
+
 ## Проверки
 
 - Контейнер `portal-al` healthy после rebuild.
