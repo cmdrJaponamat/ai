@@ -30,6 +30,18 @@ manual server-side operation without a repeatable health-check or rollback.
 - Container status is `running (healthy)`.
 - `curl http://127.0.0.1:5180/api/health` returns JSON with `ok: true`.
 
+## Follow-up: brandbook 2026 themes
+
+- Deploy `9bf437b618bb0823c8303df6cb766a9f20e98648` added an accessible
+  light/dark switcher to the portal header. The selection is stored per browser
+  in `localStorage`; the portal admin can set the default for new browsers.
+- The approved 2026 palette is `#002FFF` (primary), `#B1D1F5` (secondary), and
+  `#D4D3D5` (metal). The outdated green accent was removed from themed UI.
+- The production container is healthy after this deploy and its built JS contains
+  the `themeToggle` control.
+- Exact `Graphik LCG` web-font files were not present in the supplied brandbook
+  directory; obtain licensed `.ttf/.otf` files before final typography alignment.
+
 ## Rollback
 
 For one portal release, in `/opt/portal-al` select the previous local image and
