@@ -24,6 +24,8 @@
 - В `apply_wiki_theme.py` добавлен режим `--check`: он read-only проверяет
   ключевые маркеры корпоративной темы в `injectCSS`.
 - Обновленный CSS применен через Wiki.js GraphQL API.
+- В шапке Wiki.js используется корпоративный знак; тот же знак установлен как
+  favicon и Apple touch icon через управляемый блок `injectHead`.
 
 ## Проверка
 
@@ -33,12 +35,19 @@
   accent токены.
 - `/brand/fonts/CeraPro-Regular.ttf` и `/brand/fonts/Akrobat-Bold.ttf`
   возвращают HTTP 200.
+- HTML `/ru/it` содержит корпоративные favicon-метки, data URI знака и CSS
+  знака в шапке.
 
 ## Откат
 
 Вернуть в `aurora-wiki.css` предыдущие значения `#2e63ae`, `#214d8c`,
 `#159b8d`, `#1b2a3d`, `#63738a`, затем повторно выполнить
 `python3 apply_wiki_theme.py`.
+
+Для отката корпоративных иконок убрать из CSS правила
+`.v-toolbar__title::before` и удалить блок между
+`aurora-corporate-icons:start/end` в `injectHead`, после чего снова применить
+тему.
 
 ## Перезапуск
 
