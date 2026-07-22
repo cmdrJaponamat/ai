@@ -224,6 +224,19 @@
   `/interface wireless disable [find name=wlan2-guest]`. Удалять VLAN/DHCP/
   firewall-объекты только после проверки отсутствия guest leases.
 
+### Firewall MikroTik: Wiki runbook (22.07.2026)
+
+- На `/it/network/mikrotik-firewall` (id 76) опубликованы модель input/
+  forward/srcnat, именование зон, безопасное staged-включение jump-цепочек,
+  RouterOS-команды проверки/rollback и запрет широкого доверия к `10/8`.
+  Страница доступна только `Role-IT`, связана с сегментацией и стартовой
+  страницей; Russian sidebar содержит 59 элементов.
+- AL-MMRP обследован по свежему успешному Oxidized snapshot 22.07.2026:
+  RouterOS 7.12.1, hAP ac², legacy OVPN, VLAN/маршрутов WireGuard нет;
+  текущий forward содержит широкое `accept` и требует staged-перехода на
+  role-based policy. До live write-доступа на устройство не применять
+  настройки по архивному export.
+
 ## Проверки
 
 - Контейнер `portal-al` healthy после rebuild.
