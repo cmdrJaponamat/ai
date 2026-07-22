@@ -19,6 +19,12 @@
 - Страница `/it/network/segmentation` заменена подробной матрицей DC, site и
   VPN-зон: VLAN, подсети, шлюзы, назначение и минимально допустимые
   направления доступа. Это целевая модель, а не утверждение о полном rollout.
+- Опубликована страница `/it/equipment/network/gateways` с 11 собственными
+  MikroTik, их адресами и статусом достоверности. Read-only SSH по ключу
+  подтверждён на `AL-OBIT` и `AL-MMK`; веточные узлы `AL-MMRP`, `AL-KBO`,
+  `AL-MZTO` и `AL-NU` подтверждены через live neighbor discovery. У остальных
+  веток нужны управляемые ключи или отдельная live-сверка; подбор учётных
+  данных не выполнялся.
 - Доступ к `/it` закрыт правилами Wiki.js:
   - `Guests`: `deny-it-knowledge-guests`, `START it`, deny;
   - `ldap-users`: `deny-it-knowledge`, `START it`, deny;
