@@ -205,6 +205,25 @@
   сегментации и русской sidebar, доступной только `Role-IT`. Sidebar содержит
   58 элементов. Source опубликован commit `086fbff` в assistant.
 
+### AL-NU: гостевой Wi-Fi (22.07.2026)
+
+- Создан SSID `Aurora-Guest` на виртуальных AP `wlan1-guest` (2,4 ГГц) и
+  `wlan2-guest` (5 ГГц). Он использует VLAN 1450, шлюз `10.14.45.1/24`,
+  DHCP-пул `10.14.45.10`–`.254` и срок аренды 4 часа.
+- Корпоративный `Aurora-logistics` не переименован и не продублирован: он
+  уже соответствует назначению и остаётся в VLAN 1400. У guest Wi‑Fi включён
+  `default-forwarding=no`; пароль уникален и хранится только в локальном
+  ignored Ansible vault, не в Wiki и не в репозитории.
+- Firewall разрешает гостевому VLAN только DHCP/DNS до шлюза и forward в WAN.
+  Корпоративные маршруты, shared services и управление не добавлены. Пинг
+  публичного IP с `10.14.45.1` прошёл 3/3; до появления реального гостя
+  счётчики DHCP/forward гостевой зоны ожидаемо нулевые.
+- Перед изменением на AL-NU сохранены `pre-guest-wifi-20260722.rsc` и
+  `pre-guest-wifi-20260722.backup`. Для быстрого возврата выключить обе
+  virtual AP: `/interface wireless disable [find name=wlan1-guest]` и
+  `/interface wireless disable [find name=wlan2-guest]`. Удалять VLAN/DHCP/
+  firewall-объекты только после проверки отсутствия guest leases.
+
 ## Проверки
 
 - Контейнер `portal-al` healthy после rebuild.
