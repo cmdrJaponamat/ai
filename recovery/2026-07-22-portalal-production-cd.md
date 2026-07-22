@@ -55,6 +55,9 @@ manual server-side operation without a repeatable health-check or rollback.
   browser favicon assets. The document selects black for light browser chrome
   and white for dark browser chrome through `prefers-color-scheme`; a transparent
   black ICO remains as a legacy fallback.
+- Deploy `a821b647f5a289c2cc1e6961b05013a13898a6f1` places the monochrome mark
+  inside a 128-pixel transparent canvas with a 92-pixel safe area, preventing
+  clipping in narrow browser tabs.
 
 ## Rollback
 
