@@ -113,6 +113,12 @@ manual server-side operation without a repeatable health-check or rollback.
   `/ru/it` section URL are present; equipment, gateway, Milionnaya and WAN
   links resolve to their intended Wiki paths.
 
+## Follow-up: administrative service groups
+
+- Deploy `3193a705700b7295f20e0b607e9781d2c8b7ee44` groups cards after
+  search/filtering into network/access, compute/storage, information security,
+  monitoring and other administrative systems. Empty groups are not rendered.
+
 ## Rollback
 
 For one portal release, in `/opt/portal-al` select the previous local image and
