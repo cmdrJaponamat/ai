@@ -58,6 +58,9 @@ manual server-side operation without a repeatable health-check or rollback.
 - Deploy `a821b647f5a289c2cc1e6961b05013a13898a6f1` places the monochrome mark
   inside a 128-pixel transparent canvas with a 92-pixel safe area, preventing
   clipping in narrow browser tabs.
+- Deploy `017267b93af987d699d4ca28e78fe4c95e103452` uses a transparent vector
+  four-point variant for the browser favicon. It is selected black/white using
+  `prefers-color-scheme` and is intended for legibility at 16×16 pixels.
 
 ## Rollback
 
