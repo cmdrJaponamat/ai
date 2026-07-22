@@ -256,6 +256,30 @@
 - Откат server-side подготовки: на AL-OBIT удалить только secret и profile
   `ovpn-nu-primary`; существующие WG, legacy OVPN и маршруты не затрагивать.
 
+### AL-MMRP: перевод корпоративной LAN в VLAN 1400 (22.07.2026)
+
+- `AL-MMRP` получил рабочую границу `SITE-USERS`: `vlan1400-users` на
+  `BRIDE-LOCAL`, адрес `10.11.40.1/24` и существующий `local-dhcp` перенесены
+  на этот VLAN. Адреса сотрудников не менялись.
+- На ether2/ether3/ether4/ether5 и штатных WLAN VLAN 1400 остаётся untagged,
+  поэтому подключённые сотрудники и `AL-MMRP-1` сохранили прежний способ
+  доступа. На ether3 одновременно сохранены tagged VLAN 3 (внешний транзит
+  `IP NEDRA`) и VLAN 4 (GSP).
+- Для предсказуемой VLAN-обработки включён `vlan-filtering=yes` на
+  `BRIDE-LOCAL`. VLAN 2 и VLAN 50 намеренно не удалялись: они явно включены в
+  tagged preservation entry до отдельного подтверждения их вывода из работы.
+- До cutover на устройстве сохранены hide-sensitive export и binary backup с
+  префиксом `pre-vlan1400-migration-20260722`; временный автоматический
+  rollback после проверки удалён.
+- Проверка: DHCP leases и Wi-Fi associations продолжаются; `AL-MMRP-1`, OVPN
+  hub и корпоративный DNS доступны; FDB и трафик VLAN 3/4 на ether3 активны.
+  `MMRP-GW1` не отвечает на ICMP, но его DHCP lease/ARP и VLAN 4 трафик
+  сохраняются.
+- Ручной rollback: установить `vlan-filtering=no` на `BRIDE-LOCAL`, вернуть
+  pvid=1 на ether2/ether3/ether4/ether5/wlan1/wlan2, перенести `10.11.40.1/24`
+  и `local-dhcp` обратно на `BRIDE-LOCAL`, затем отключить/удалить
+  `vlan1400-users` и созданные bridge VLAN entries. Reboot не требуется.
+
 ## Проверки
 
 - Контейнер `portal-al` healthy после rebuild.
