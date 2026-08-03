@@ -126,3 +126,13 @@ two-line OpenVPN username/password obtained from the local NetworkManager secret
 store. It is deliberately outside a repository and must not be copied, committed,
 or shown. To revoke the saved console credentials, securely replace or remove only
 that file and restore `auth-user-pass` without an argument in both configs.
+
+## Desktop launcher
+
+`/home/admin-al/work/admin-vpn.sh` launches the console OpenVPN client using
+the canonical work config. It refuses to start a duplicate matching client and
+otherwise keeps the terminal open for the OpenVPN log. Its KDE launcher is
+`/home/admin-al/.local/share/applications/aurora-admin-vpn.desktop`, named
+"Административный VPN Aurora". Both files are local-only; the script mode is
+0700. Remove the desktop file and script to undo the launcher without changing
+the VPN configuration or its saved credentials.
