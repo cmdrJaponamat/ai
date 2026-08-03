@@ -16,6 +16,19 @@ To stop only the parallel client tunnel:
 
     nmcli connection down id admin-vpn-parallel
 
+## Yastreb compatibility LAN route from the workstation
+
+The gateway at 10.254.32.2 is reachable through the existing tunnel. The vessel LAN
+192.168.1.0/24 needs an explicit client route because it is outside the tunnel's original
+route list. The persistent OpenVPN profile /home/admin-al/work/admin.ovpn now includes:
+
+    route 192.168.1.0 255.255.255.0
+
+To activate this route immediately without reconnecting the externally managed tun0, run
+from an authenticated local terminal:
+
+    sudo ip route replace 192.168.1.0/24 via 10.10.3.1 dev tun0
+
 ## Applied gateway rules
 
 The following two comments identify the only new RouterOS filter rules:
