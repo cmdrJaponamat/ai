@@ -5,6 +5,17 @@
 Permit the administrative OpenVPN pool 10.78.90.32/27 to manage and route through
 corporate gateway MikroTik devices, and enroll the vessel gateway AL-YASTREB-GW.
 
+## Parallel client tunnel
+
+The active NetworkManager profile admin-vpn-parallel uses tun1 and received static
+CCD address 10.78.90.34/27. It deliberately has never-default=yes and
+ignore-auto-dns=yes, with the existing Wi-Fi DNS retained. The independent manual tunnel
+uses tun0 and was not restarted or modified.
+
+To stop only the parallel client tunnel:
+
+    nmcli connection down id admin-vpn-parallel
+
 ## Applied gateway rules
 
 The following two comments identify the only new RouterOS filter rules:
