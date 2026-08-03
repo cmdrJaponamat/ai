@@ -64,6 +64,27 @@ Their rules need to be added after their current full administrative credentials
   /home/oxidized/.config/oxidized/router.db.backup-20260803-yastreb on spb-oxidized.
 - PortalAL catalogue contains gw-yastreb, visible only to the admin role.
 
+## Temporary access through legacy admin VPN (`tun0`)
+
+The workstation's legacy tunnel address `10.10.3.112` can reach
+`10.254.32.2` through routing and WireGuard, but the Yastreb input policy accepts
+TCP management only from its `ADMIN-NETS` list.  On 2026-08-03 a narrow temporary
+source-NAT rule was added on AL-OBIT so that this one source appears as the
+already-authorized AL-OBIT address when reaching only the Yastreb gateway:
+
+    /ip firewall nat add chain=srcnat action=src-nat \
+      src-address=10.10.3.112/32 dst-address=10.254.32.2/32 \
+      out-interface=WG-YASTREB to-addresses=10.78.3.254 \
+      comment="TEMP admin-al tun0 access to Yastreb 2026-08-03"
+
+After this rule was installed, TCP/22 and TCP/8291 on `10.254.32.2` responded.
+It does not provide access to other systems or from other clients.
+
+The durable replacement, once a working Yastreb administrator account is
+confirmed, is to add `10.10.3.0/24` to `ADMIN-NETS` (and `VPN-ADMINS` if used by
+the forward policy) on AL-YASTREB-GW, verify WinBox access, then remove the
+temporary NAT rule.
+
 ## Rollback
 
 On each changed gateway:
@@ -73,3 +94,7 @@ On each changed gateway:
 
 For Oxidized, restore the named router.db backup and restart oxidized.service.
 For PortalAL, remove only gw-yastreb from its managed baseline and catalogue.
+
+For the temporary AL-OBIT source NAT rule:
+
+    /ip firewall nat remove [find where comment="TEMP admin-al tun0 access to Yastreb 2026-08-03"]
