@@ -113,3 +113,16 @@ For the temporary AL-OBIT source NAT rule:
 To remove the durable legacy-tunnel Yastreb access, if explicitly required:
 
     /ip firewall address-list remove [find where list="ADMIN-NETS" and address="10.10.3.0/24" and comment="legacy admin VPN tun0"]
+
+## Console admin VPN credentials
+
+The console client configs at `/home/admin-al/work/admin-vpn.ovpn` and
+`/home/admin-al/Документы/admin-vpn.ovpn` now reference:
+
+    auth-user-pass /home/admin-al/.config/openvpn/admin-vpn.auth
+
+The referenced file is owned by `admin-al`, mode `0600`, and contains the
+two-line OpenVPN username/password obtained from the local NetworkManager secret
+store. It is deliberately outside a repository and must not be copied, committed,
+or shown. To revoke the saved console credentials, securely replace or remove only
+that file and restore `auth-user-pass` without an argument in both configs.
