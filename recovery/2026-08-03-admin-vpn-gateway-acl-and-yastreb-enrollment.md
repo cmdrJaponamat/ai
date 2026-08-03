@@ -85,6 +85,17 @@ confirmed, is to add `10.10.3.0/24` to `ADMIN-NETS` (and `VPN-ADMINS` if used by
 the forward policy) on AL-YASTREB-GW, verify WinBox access, then remove the
 temporary NAT rule.
 
+This replacement was completed on 2026-08-03: `10.10.3.0/24` was added to
+AL-YASTREB-GW's `ADMIN-NETS` with comment `legacy admin VPN tun0`, and the
+temporary AL-OBIT NAT rule was removed. TCP/22 and TCP/8291 remained reachable
+from the workstation through `tun0` afterwards.
+
+AL-YASTREB-GW and AL-MMK-GPNS also now contain the standard pair of rules for
+the newer administrative VPN pool `10.78.90.32/27`:
+
+- `CORP: Admin VPN 10.78.90.32/27 input`
+- `CORP: Admin VPN 10.78.90.32/27 forward`
+
 ## Rollback
 
 On each changed gateway:
@@ -98,3 +109,7 @@ For PortalAL, remove only gw-yastreb from its managed baseline and catalogue.
 For the temporary AL-OBIT source NAT rule:
 
     /ip firewall nat remove [find where comment="TEMP admin-al tun0 access to Yastreb 2026-08-03"]
+
+To remove the durable legacy-tunnel Yastreb access, if explicitly required:
+
+    /ip firewall address-list remove [find where list="ADMIN-NETS" and address="10.10.3.0/24" and comment="legacy admin VPN tun0"]
