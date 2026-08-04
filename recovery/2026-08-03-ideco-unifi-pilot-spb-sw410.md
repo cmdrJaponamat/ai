@@ -45,6 +45,7 @@
 /ip address add address=172.31.146.1/30 interface=vlan1461-ideco-transit comment="Ideco pilot transit gateway"
 /interface bridge vlan add bridge=Bridge-LAN vlan-ids=1461 tagged=Bridge-LAN,ether3 comment="Ideco pilot transit to SW-410"
 /ip firewall filter add chain=forward action=accept in-interface=vlan1461-ideco-transit out-interface-list=WAN comment="Ideco pilot transit to WAN" place-before=[find where comment="drop forward"]
+/ip route add dst-address=10.76.146.0/24 gateway=172.31.146.2 comment="Ideco WiFi pilot return route"
 ```
 
 На Ideco через штатный web API:
@@ -52,7 +53,7 @@
 - LAN на MAC `1c:57:d8:18:de:00`, tagged `VLAN 1460`, адрес `10.76.146.1/24`;
 - DHCP на `10.76.146.50–10.76.146.200`, DNS `10.78.4.253, 1.1.1.1`, lease 1 час;
 - WAN на MAC `1c:57:d8:18:de:01`, адрес `172.31.146.2/30`, шлюз `172.31.146.1`;
-- автоматический SNAT Ideco включён. Отдельное правило NAT не требуется.
+- на первом тесте трафик маскируется существующим общим src-NAT MikroTik при выходе в WAN; добавленный обратный маршрут возвращает ответы через Ideco. Автоматический SNAT Ideco включён, но для этой схемы не требуется.
 
 Создана контрольная резервная копия Ideco после подготовки: `backup-20260803212307-Bez-nazvaniya-c4c5c30a-3d6a-4bb1-9bbe-98e0ff155051-ideco-utm-fstek-19-20-14.tbz`.
 
@@ -66,6 +67,14 @@
 ```
 
 Фактический результат: VLAN 1460 имеет только tagged-порты `ether6,ether7`; VLAN 1461 идёт tagged `ether1` / untagged `ether11`. Оба линка работают на 1 Гбит/с, PoE на коммутаторе отключено. Ideco сохраняет доступность по `Leth1` / `192.168.203.82`; Ideco и MikroTik отвечают друг другу по `172.31.146.2` / `172.31.146.1`, а выход Ideco через транзит до `1.1.1.1` подтверждён.
+
+## Первый клиентский тест
+
+- телефон `realme-10` получил аренду `10.76.146.173` (MAC `d2:7a:44:ce:58:9d`);
+- шлюз Ideco отвечает, MikroTik также достигает клиента через маршрут возврата;
+- DNS к `1.1.1.1` получает ответы;
+- подтверждены полноценные TCP-сессии телефона по HTTP/HTTPS и UDP-сессия прикладного сервиса;
+- доступ к рабочим SSID и VLAN 30 не менялся.
 
 ## Откат
 
@@ -85,6 +94,7 @@
 
 ```routeros
 /ip firewall filter remove [find where comment="Ideco pilot transit to WAN"]
+/ip route remove [find where comment="Ideco WiFi pilot return route"]
 /interface bridge vlan remove [find where vlan-ids=1461]
 /ip address remove [find where address="172.31.146.1/30"]
 /interface vlan remove [find where name="vlan1461-ideco-transit"]
@@ -99,7 +109,7 @@
 1. `1c:57:d8:18:de:00` ↔ `SPB-SW-410 ether6` — VLAN 1460 tagged.
 2. `1c:57:d8:18:de:01` ↔ `SPB-SW-410 ether11` — VLAN 1461 untagged.
 
-Проверены линк, маршрут до `172.31.146.1`, DNS и интернет со стороны Ideco. Следующий шаг — создать и назначить SSID на `SPB410IT`, затем проверить DHCP и доступ одним тестовым клиентом.
+Проверены линк, маршрут до `172.31.146.1`, DNS и интернет со стороны Ideco. SSID создан и первый тестовый клиент прошёл DHCP, DNS и HTTP/HTTPS. Следующий шаг — включить на Ideco наблюдение и классификацию приложений без блокировок.
 
 ## Перезапуск
 
