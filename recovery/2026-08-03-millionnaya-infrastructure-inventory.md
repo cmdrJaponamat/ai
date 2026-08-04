@@ -9,8 +9,9 @@
   CRS328, десятью UniFi AP, двумя Yealink ВКС, СКУД и подтверждённым парком
   печати.
 - В production-каталог PortalAL добавлены admin-only карточки Cloud Key,
-  двух коммутаторов, группы UniFi AP, MeetingEye 600 и MeetingBar A10.
-  Baseline и рабочий PostgreSQL-каталог содержат одинаковые шесть ID.
+  двух коммутаторов, группы UniFi AP, MeetingEye 600, MeetingBar A10 и МФУ
+  Kyocera M8124cidn / OpenSpace 410 (`192.168.203.120`). Baseline и рабочий
+  PostgreSQL-каталог содержат одинаковые семь ID.
 
 ## Откат
 
