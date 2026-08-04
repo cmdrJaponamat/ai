@@ -113,6 +113,20 @@ Ideco введён в домен `AURORA-LOGISTICS.LOCAL` как компьют�
 
 Это не является блокировкой: правило пилотной сети по-прежнему разрешает трафик, а DPI-профиль только наблюдает. Чтобы проверить пользовательскую политику, нужен доменный Windows-ноутбук в `Aurora-Security-Pilot`: после входа пользователя в Windows и первой попытки доступа через Ideco в его списке сессий должен появиться IP `10.76.146.x` и доменная учётная запись.
 
+Так как пилотный транзит изначально разрешал только WAN, на `AL-SPB-MILLION` добавлены два узких исключения перед `drop forward`:
+
+```routeros
+/ip firewall filter add chain=forward action=accept in-interface=vlan1461-ideco-transit dst-address=10.78.3.50 protocol=udp dst-port=53,88 comment="Ideco pilot AD DNS-Kerberos UDP" place-before=[find where comment="drop forward"]
+/ip firewall filter add chain=forward action=accept in-interface=vlan1461-ideco-transit dst-address=10.78.3.50 protocol=tcp dst-port=53,88 comment="Ideco pilot AD DNS-Kerberos TCP" place-before=[find where comment="drop forward"]
+```
+
+Они нужны только для DNS и Kerberos к одному DC; пилот не получает маршрут в другие подсети. Откат:
+
+```routeros
+/ip firewall filter remove [find where comment="Ideco pilot AD DNS-Kerberos UDP"]
+/ip firewall filter remove [find where comment="Ideco pilot AD DNS-Kerberos TCP"]
+```
+
 ## Откат
 
 ```routeros
