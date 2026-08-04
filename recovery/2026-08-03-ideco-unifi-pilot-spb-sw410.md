@@ -167,3 +167,79 @@ Ideco введён в домен `AURORA-LOGISTICS.LOCAL` как компьют�
 ## Перезапуск
 
 Не требуется.
+
+## Доступ к shared_srvs для пилотного VLAN
+
+### Причина
+
+Для доменной авторизации клиенту недостаточно одного `spb-dc1-al`: DNS SRV может
+вернуть другой контроллер домена (`dc2` `10.10.20.50`). Вместо привязки к одному
+DC пилотной сети дан контролируемый доступ ко всему уже существующему списку
+`shared_srvs` на `AL-SPB-MILLION`.
+
+### Изменения 2026-08-04
+
+На Ideco создано активное правило policy routing `Ideco pilot: shared_srvs via
+AL-SPB-MILLION`:
+
+- источник: `10.76.146.0/24` (`subnet.id.1`);
+- назначение: статический снимок 16 адресов `shared_srvs`
+  (`ip_address_list.id.1`);
+- шлюз: транзитный интерфейс Ideco `Eeth3` (`172.31.146.2 → 172.31.146.1`).
+
+Список применён также как разрешённый ресурс до авторизации пользователя. Это
+не даёт пилотному VLAN общий доступ в корпоративную сеть или интернет: до
+авторизации доступны только адреса из списка; после авторизации остальная
+политика Ideco остаётся отдельной.
+
+На `AL-SPB-MILLION` добавлено правило перед `drop forward`:
+
+```routeros
+/ip firewall filter add chain=forward action=accept \
+    in-interface=vlan1461-ideco-transit dst-address-list=shared_srvs \
+    comment="Ideco pilot to shared_srvs" \
+    place-before=[find where comment="drop forward"]
+```
+
+На `AL-OBIT` создан зеркальный список `IdecoPilotSharedSrvs` из тех же 16
+адресов и правило перед финальным `[DROP_ALL]`:
+
+```routeros
+/ip firewall filter add chain=forward action=accept \
+    src-address=10.76.146.0/24 dst-address-list=IdecoPilotSharedSrvs \
+    comment="Ideco pilot to shared_srvs" \
+    place-before=[find where log-prefix="[DROP_ALL]"]
+```
+
+Отдельные маршруты не добавлялись: на `AL-SPB-MILLION` уже активны
+`10.10.0.0/16 → WG-AL-MMK` и `10.78.0.0/16 → WG-SPB-DC`.
+
+### Проверка
+
+Оба policy-route на Ideco активны. Проверка ядра Ideco с меткой правила
+подтвердила путь `10.10.20.50`, `10.10.40.149`, `10.78.22.3` через
+`172.31.146.1/Eeth3`. Окончательная клиентская проверка выполняется с
+ноутбука в SSID VLAN 1460:
+
+```powershell
+Test-NetConnection 10.10.20.50 -Port 88
+nltest /dsgetdc:aurora-logistics.local /force
+klist purge
+klist get krbtgt
+```
+
+### Откат
+
+```routeros
+# AL-SPB-MILLION
+/ip firewall filter remove [find where comment="Ideco pilot to shared_srvs"]
+
+# AL-OBIT
+/ip firewall filter remove [find where comment="Ideco pilot to shared_srvs"]
+/ip firewall address-list remove [find where list="IdecoPilotSharedSrvs"]
+```
+
+На Ideco удалить policy-rule с идентификатором `2`, alias `ip_address_list.id.1`
+и ресурс pre-auth, ссылающийся на него. Потребуется также удалить или изменить
+связанные записи только после того, как правило не используется. Перезапуск не
+нужен.
