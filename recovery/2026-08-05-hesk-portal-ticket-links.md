@@ -11,7 +11,7 @@
 
 ## Фактическое состояние
 
-- Портал: образ `portal-al:ad0fa26`, health-check успешен.
+- Портал: образ `portal-al:d716816`, health-check успешен.
 - Шаблоны HESK: `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/{emails,html_emails}/`.
 - Резервные копии: исходная до первого переключения `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-103921`; перед добавлением обеих ссылок — `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-115408`; перед сменой их приоритета — `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-115929`.
 - Мост HESK: `/opt/hesk-portal-bridge/index.php`; резервная копия перед добавлением оценки ответа — файл с суффиксом `.bak-20260805-1154*` в том же каталоге.
@@ -29,3 +29,5 @@ sudo cp -a /var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket
 Для отката только новых действий requester UI: развернуть образ `portal-al:fc38e65` и восстановить предыдущий `/opt/hesk-portal-bridge/index.php.bak-20260805-1154*`. Это уберёт действия «Оценить ответ», «Закрыть» и «Возобновить» с прямой карточки, но не изменит сами заявки.
 
 Прямая страница `/requests/<track-id>` автоматически обновляет данные каждые 20 секунд, только пока вкладка видима, и сразу после возвращения фокуса. Обновление не меняет черновик ответа и выбранные файлы. Откат: развернуть образ `portal-al:be440e2`.
+
+Операторские уведомления HESK (`category_moved`, `new_note`, `new_reply_by_customer`, `new_ticket_staff`, `overdue_ticket`, `ticket_assigned_to_you`, `ticket_escalated`) теперь сначала ведут на `/tickets?ticket=<track-id>`, затем содержат резервную ссылку HESK. Портал допускает к этой карточке только пользователя с ролью `it`/`admin`, связанным профилем HESK, правом просмотра и категорией заявки. История HESK (создание, назначение, смены статуса, категории, приоритета, сроков, вложений и системные события) видна и заявителю, и исполнителю; внутренние заметки остаются только у исполнителя.
