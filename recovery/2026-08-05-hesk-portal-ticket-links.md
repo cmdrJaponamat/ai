@@ -6,14 +6,14 @@
 
 - PortalAL получил динамический маршрут `/requests/<track-id>`.
 - Страница запрашивает заявку через существующий endpoint «мои заявки»: сервер сопоставляет e-mail HESK с e-mail текущей AD-сессии. Сам номер заявки в URL не предоставляет доступ.
-- В HESK переключены только пользовательские шаблоны `new_ticket`, `new_ticket_by_staff`, `new_reply_by_staff`, `ticket_closed`, в обычном и HTML-виде. На период проверки каждый из них содержит две ссылки: исходную HESK и карточку PortalAL. Ссылки исполнителям не менялись и продолжают вести в административный HESK.
+- В HESK переключены только пользовательские шаблоны `new_ticket`, `new_ticket_by_staff`, `new_reply_by_staff`, `ticket_closed`, в обычном и HTML-виде. На период проверки каждый из них содержит две ссылки: сначала карточку PortalAL, ниже — малозаметный резервный переход в HESK. Ссылки исполнителям не менялись и продолжают вести в административный HESK.
 - В прямой карточке PortalAL добавлены пользовательские действия HESK: ответ с вложениями, скачивание/просмотр вложений, закрытие, возобновление, печать и оценка ответа исполнителя. Оценка включена в HESK и сохраняется в его исходных таблицах.
 
 ## Фактическое состояние
 
 - Портал: образ `portal-al:be440e2`, health-check успешен.
 - Шаблоны HESK: `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/{emails,html_emails}/`.
-- Резервные копии: исходная до первого переключения `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-103921`; перед добавлением обеих ссылок — `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-115408`.
+- Резервные копии: исходная до первого переключения `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-103921`; перед добавлением обеих ссылок — `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-115408`; перед сменой их приоритета — `/var/www/helpdesk.aurora-logistics.ru/html/language/ru/.portal-ticket-links-20260805-115929`.
 - Мост HESK: `/opt/hesk-portal-bridge/index.php`; резервная копия перед добавлением оценки ответа — файл с суффиксом `.bak-20260805-1154*` в том же каталоге.
 - Исходник безопасного применения: `assistant/apps/internal-employee-portal/integrations/hesk-email-templates/apply-portal-ticket-links.sh`.
 
