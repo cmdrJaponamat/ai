@@ -218,3 +218,15 @@ Test-NetConnection 10.76.146.1 -Port 8443
 - [ ] Оформить конечную site-модель Ideco для users, AP management, guest,
   CCTV, NVR, ACS, voice, print devices и print services; текущая конфигурация
   покрывает только users-пилот.
+
+## 12. Передача в Wiki.js
+
+Подробная операторская документация опубликована в закрытом разделе Wiki.js,
+доступном только `Role-IT`:
+
+- [фактическая схема и выполненная работа Ideco СПБ](https://wiki.aurora-logistics.ru/ru/it/network/spb-million/ideco-pilot);
+- [пошаговый runbook развёртывания площадочного Ideco](https://wiki.aurora-logistics.ru/ru/it/operations/runbooks/ideco-site-firewall);
+- [чеклист испытаний и критерии переноса](https://wiki.aurora-logistics.ru/ru/it/operations/runbooks/ideco-pilot-testing).
+
+Страницы содержат только эксплуатационные сведения. Пароли, PSK, Key ID,
+API-токены, cookie и другие секреты намеренно не публикуются.
