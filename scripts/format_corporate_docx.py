@@ -34,8 +34,8 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 CORP_BLUE = '004D73'
-HEADER_FILL = 'DCE6F1'
-GRID_COLOR = '8EA9B9'
+HEADER_FILL = 'F2F2F2'
+GRID_COLOR = 'A6A6A6'
 REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CT_NS = 'http://schemas.openxmlformats.org/package/2006/content-types'
 W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
@@ -137,10 +137,10 @@ def set_style(style, *, color='000000', bold=False, first_line=True, keep=False,
 
 def configure_styles(doc):
     set_style(doc.styles['Normal'])
-    set_style(doc.styles['Title'], color=CORP_BLUE, bold=True, first_line=False, keep=True, before=4, after=10)
-    set_style(doc.styles['Heading 1'], color=CORP_BLUE, bold=True, first_line=False, keep=True, before=10, after=4)
-    set_style(doc.styles['Heading 2'], color=CORP_BLUE, bold=True, first_line=False, keep=True, before=7, after=3)
-    set_style(doc.styles['Heading 3'], color=CORP_BLUE, bold=True, first_line=False, keep=True, before=5, after=2)
+    set_style(doc.styles['Title'], bold=True, first_line=False, keep=True, before=4, after=10)
+    set_style(doc.styles['Heading 1'], bold=True, first_line=False, keep=True, before=10, after=4)
+    set_style(doc.styles['Heading 2'], bold=True, first_line=False, keep=True, before=7, after=3)
+    set_style(doc.styles['Heading 3'], bold=True, first_line=False, keep=True, before=5, after=2)
 
 
 def classify_paragraph(paragraph, title_seen: bool):
@@ -170,11 +170,28 @@ def format_paragraphs(doc, auto_headings: bool):
             paragraph.paragraph_format.space_after = Pt(5)
             paragraph.paragraph_format.line_spacing = 1
         for run in paragraph.runs:
-            set_run_font(run, color=CORP_BLUE if is_heading else None, bold=True if is_heading else None)
+            set_run_font(run, bold=True if is_heading else None)
+
+
+def add_table_spacing(table):
+    """Adds a 7 pt structural gap after a table, before the following paragraph."""
+    following = table._tbl.getnext()
+    if following is None or following.tag != qn('w:p'):
+        return
+    p_pr = OxmlElement('w:pPr')
+    spacing = OxmlElement('w:spacing')
+    spacing.set(qn('w:before'), '0')
+    spacing.set(qn('w:after'), '140')
+    spacing.set(qn('w:line'), '1')
+    spacing.set(qn('w:lineRule'), 'exact')
+    p_pr.append(spacing)
+    gap = OxmlElement('w:p')
+    gap.append(p_pr)
+    table._tbl.addnext(gap)
 
 
 def format_tables(doc):
-    for table in doc.tables:
+    for table in reversed(doc.tables):
         table.style = 'Table Grid'
         table.autofit = True
         set_table_border(table)
@@ -194,7 +211,8 @@ def format_tables(doc):
                     paragraph.paragraph_format.first_line_indent = Cm(0)
                     paragraph.paragraph_format.keep_with_next = False
                     for run in paragraph.runs:
-                        set_run_font(run, color=CORP_BLUE if is_header else None, bold=True if is_header else None)
+                        set_run_font(run, bold=True if is_header else None)
+        add_table_spacing(table)
 
 
 def set_sections(doc, template_path: Path | None):
