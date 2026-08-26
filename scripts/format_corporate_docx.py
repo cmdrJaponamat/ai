@@ -34,7 +34,6 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 CORP_BLUE = '004D73'
-HEADER_FILL = 'F2F2F2'
 GRID_COLOR = 'A6A6A6'
 REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CT_NS = 'http://schemas.openxmlformats.org/package/2006/content-types'
@@ -74,6 +73,13 @@ def set_cell_shading(cell, fill: str):
         shd = OxmlElement('w:shd')
         tc_pr.append(shd)
     shd.set(qn('w:fill'), fill)
+
+
+def clear_cell_shading(cell):
+    tc_pr = cell._tc.get_or_add_tcPr()
+    shd = tc_pr.find(qn('w:shd'))
+    if shd is not None:
+        tc_pr.remove(shd)
 
 
 def set_table_border(table, color: str = GRID_COLOR, size: str = '6'):
@@ -202,9 +208,8 @@ def format_tables(doc):
             is_header = row_index == 0
             for cell in row.cells:
                 set_cell_margins(cell)
+                clear_cell_shading(cell)
                 cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-                if is_header:
-                    set_cell_shading(cell, HEADER_FILL)
                 for paragraph in cell.paragraphs:
                     paragraph.paragraph_format.space_before = Pt(0)
                     paragraph.paragraph_format.space_after = Pt(0)
