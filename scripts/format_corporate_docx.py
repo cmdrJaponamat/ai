@@ -46,7 +46,7 @@ ET.register_namespace('r', R_NS)
 
 RE_SECTION_1 = re.compile(r'^\d+\.\s+\S')
 RE_SECTION_2 = re.compile(r'^\d+\.\d+\.?\s+\S')
-RE_APPENDIX = re.compile(r'^Приложение(?:\s+\d+)?(?:[.:]|\s)', re.IGNORECASE)
+RE_APPENDIX = re.compile(r'^Приложение\s+\d+(?:[.:]|\s)', re.IGNORECASE)
 RE_ALL_CAPS_TITLE = re.compile(r'^[А-ЯЁA-Z0-9«»"().,–— -]{12,}$')
 
 
@@ -405,6 +405,13 @@ def main():
         if not args.brand_template.is_file():
             raise SystemExit(f'Не найден шаблон: {args.brand_template}')
         rebase_on_brand_template(output, args.brand_template)
+        # После переноса тела ссылки на стили исходного документа могут не
+        # совпадать с идентификаторами стилей корпоративного шаблона. Повторное
+        # назначение связывает абзацы с реальными Heading 1/2/Title шаблона.
+        branded_doc = Document(str(output))
+        configure_styles(branded_doc)
+        format_paragraphs(branded_doc, not args.no_auto_headings)
+        branded_doc.save(output)
 
     print(output)
 
