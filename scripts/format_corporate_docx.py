@@ -48,6 +48,11 @@ RE_SECTION_1 = re.compile(r'^\d+\.\s+\S')
 RE_SECTION_2 = re.compile(r'^\d+\.\d+\.?\s+\S')
 RE_APPENDIX = re.compile(r'^Приложение\s+\d+(?:[.:]|\s)', re.IGNORECASE)
 RE_ALL_CAPS_TITLE = re.compile(r'^[А-ЯЁA-Z0-9«»"().,–— -]{12,}$')
+# Короткие названия видов внутренних документов не проходят общий порог
+# RE_ALL_CAPS_TITLE, но являются первой строкой составного заголовка.
+RE_DOCUMENT_KIND_TITLE = re.compile(
+    r'^(ПОЛОЖЕНИЕ|РЕГЛАМЕНТ|ИНСТРУКЦИЯ|ПОРЯДОК|НОРМА)$', re.IGNORECASE
+)
 
 
 def set_run_font(run, *, color: str | None = None, bold: bool | None = None):
@@ -153,11 +158,17 @@ def classify_paragraph(paragraph, title_seen: bool):
     text = paragraph.text.strip()
     if not text:
         return title_seen
-    if RE_SECTION_2.match(text):
+    # В положениях и регламентах «1.1. <длинный текст>» обычно является
+    # нумерованным пунктом, а не подзаголовком. Подзаголовком считаем только
+    # короткую самостоятельную строку без завершающего знака препинания.
+    is_short_subheading = (
+        len(text) <= 110 and not text.endswith(('.', ';', ':', '!', '?'))
+    )
+    if RE_SECTION_2.match(text) and is_short_subheading:
         paragraph.style = 'Heading 2'
     elif RE_SECTION_1.match(text) or RE_APPENDIX.match(text):
         paragraph.style = 'Heading 1'
-    elif RE_ALL_CAPS_TITLE.match(text):
+    elif RE_ALL_CAPS_TITLE.match(text) or RE_DOCUMENT_KIND_TITLE.match(text):
         paragraph.style = 'Title'
         title_seen = True
     return title_seen
@@ -169,6 +180,10 @@ def format_paragraphs(doc, auto_headings: bool):
         if auto_headings:
             title_seen = classify_paragraph(paragraph, title_seen)
         is_heading = paragraph.style.name.startswith('Heading') or paragraph.style.name == 'Title'
+        if paragraph.style.name == 'Title':
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        elif paragraph.style.name.startswith('Heading'):
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
         paragraph.paragraph_format.keep_with_next = is_heading
         if not is_heading and paragraph.text.strip():
             paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -363,7 +378,17 @@ def rebase_on_brand_template(docx_path: Path, template_path: Path):
     insert_at = 0
     for child in source.element.body:
         if child.tag != qn('w:sectPr'):
-            target_body.insert(insert_at, deepcopy(child))
+            copied_child = deepcopy(child)
+            # В исходных файлах часто есть промежуточные секции. Их r:id
+            # ссылаются на части исходного DOCX и после переноса тела могут
+            # совпасть с другим назначением r:id корпоративного шаблона
+            # (например, со стилями). Оставляем геометрию секции, но даём ей
+            # наследовать фон и колонтитулы шаблона.
+            for sect_pr in copied_child.iter(qn('w:sectPr')):
+                for reference in list(sect_pr):
+                    if reference.tag in (qn('w:headerReference'), qn('w:footerReference')):
+                        sect_pr.remove(reference)
+            target_body.insert(insert_at, copied_child)
             insert_at += 1
 
     branded.save(str(docx_path))
