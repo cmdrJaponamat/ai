@@ -22,6 +22,7 @@ import shutil
 import tempfile
 import zipfile
 from copy import deepcopy
+from io import BytesIO
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -370,6 +371,18 @@ def rebase_on_brand_template(docx_path: Path, template_path: Path):
     branded = Document(str(template_path))
     target_body = branded.element.body
     target_sect_pr = target_body.sectPr
+    template_section_references = [
+        deepcopy(reference)
+        for reference in target_sect_pr
+        if reference.tag in (qn('w:headerReference'), qn('w:footerReference'))
+    ]
+
+    # Сопоставляем связи исходного тела с уже существующими частями шаблона.
+    # В частности, у двух DOCX один и тот же логотип может иметь разные rId.
+    target_rel_by_part = {}
+    for rel_id, relationship in branded.part.rels.items():
+        if not relationship.is_external:
+            target_rel_by_part[(relationship.reltype, str(relationship.target_part.partname))] = rel_id
 
     for child in list(target_body):
         if child is not target_sect_pr:
@@ -388,6 +401,42 @@ def rebase_on_brand_template(docx_path: Path, template_path: Path):
                 for reference in list(sect_pr):
                     if reference.tag in (qn('w:headerReference'), qn('w:footerReference')):
                         sect_pr.remove(reference)
+                # Каждая промежуточная секция должна использовать фон и
+                # колонтитулы именно корпоративного шаблона. Без этого Word
+                # воспринимает секцию как самостоятельную и фон пропадает на
+                # части страниц.
+                for index, reference in enumerate(template_section_references):
+                    sect_pr.insert(index, deepcopy(reference))
+
+            # Перенесённый текст может содержать рисунки и гиперссылки. Их
+            # rId локальны для исходного DOCX, поэтому переносим/создаём
+            # соответствующую связь в корпоративном шаблоне.
+            for element in copied_child.iter():
+                if element.tag in (qn('w:headerReference'), qn('w:footerReference')):
+                    continue
+                for attribute in (qn('r:id'), qn('r:embed'), qn('r:link')):
+                    old_rel_id = element.get(attribute)
+                    if not old_rel_id or old_rel_id not in source.part.rels:
+                        continue
+                    relationship = source.part.rels[old_rel_id]
+                    if relationship.is_external:
+                        new_rel_id = branded.part.relate_to(
+                            relationship.target_ref, relationship.reltype, is_external=True
+                        )
+                    else:
+                        part_key = (relationship.reltype, str(relationship.target_part.partname))
+                        new_rel_id = target_rel_by_part.get(part_key)
+                        if new_rel_id is None and relationship.reltype.endswith('/image'):
+                            new_rel_id, _ = branded.part.get_or_add_image(
+                                BytesIO(relationship.target_part.blob)
+                            )
+                            target_rel_by_part[part_key] = new_rel_id
+                        if new_rel_id is None:
+                            raise ValueError(
+                                f'Невозможно безопасно перенести связь {old_rel_id} '
+                                f'типа {relationship.reltype} из {docx_path.name}'
+                            )
+                    element.set(attribute, new_rel_id)
             target_body.insert(insert_at, copied_child)
             insert_at += 1
 
