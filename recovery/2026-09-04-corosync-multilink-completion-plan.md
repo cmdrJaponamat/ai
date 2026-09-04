@@ -1,6 +1,6 @@
 # Завершение выделенных сетей Corosync для SPB-OBIT-DC
 
-Дата составления: 2026-09-04. Статус: рабочий runbook, выполнение не начато.
+Дата составления: 2026-09-04. Статус: выполнено и проверено 2026-09-04.
 
 ## Цель
 
@@ -173,5 +173,40 @@ storage не получают нарушений, восстановленный
 
 ## Следующее действие
 
-Начать с этапа 1, затем изменить только lower `XGE1/0/49:2`. До успешного
-завершения этапов 2–4 не редактировать `corosync.conf`.
+План завершён. Дальнейшая штатная эксплуатация: контролировать все три link
+через `corosync-cfgtool -s`; конфигурационные изменения выполнять только с
+повышением `config_version`.
+
+## Фактическое выполнение 2026-09-04
+
+- Baseline: кластер был quorate 3/3 на config version 12/link0; storage PVE1 и
+  PVE2 было active, failed units отсутствовали.
+- Созданы backups с mode 0600:
+  - PVE2: `/root/interfaces.pre-corosync-multilink-20260904-1319`;
+  - PVE3: `/root/corosync.conf.pre-multilink-20260904-1319`.
+- H3C lower `XGE1/0/49:2` переведён в hybrid: VLAN 1 сохранён untagged,
+  VLAN 1061 добавлен tagged, описание дополнено `corosync-ring2`. Порт остался
+  UP 10 Гбит/с без ошибок; конфигурация сохранена.
+- На PVE2 через штатный API созданы и применены `ens2f0.1060 = 10.78.6.2/29`
+  и `ens2f1.1061 = 10.78.6.10/29`. Pending diff содержал только эти блоки,
+  reload завершился `OK`; default route, native iSCSI и storage не изменились.
+- Полная матрица PVE1–PVE3 проверена из каждого узла в VLAN 1060 и 1061:
+  20/20 пакетов по каждому направлению, 0% потерь; DF payload 1472 проходит.
+- Оба H3C изучили три ожидаемых MAC в своих VLAN на `XGE1/0/5`,
+  `XGE1/0/49:1`, `XGE1/0/49:2`; CRC/input/output/carrier errors отсутствуют.
+- Отдельный кандидат Corosync прошёл `corosync -t`. В pmxcfs применён config
+  version 13 с ring1/ring2 и linknumber 1/2; `link_mode: passive` и тайминги
+  сохранены. Все три links connected на всех трёх узлах, global data MTU 1397.
+- На PVE3 точечными временными nft-фильтрами последовательно имитирован отказ
+  UDP 5405/link0, 5406/link1 и 5407/link2. Каждый link переходил в disconnected,
+  два остальных сохраняли membership и quorum 3/3; после удаления фильтра link
+  автоматически восстанавливался. Временная nft-таблица удалена.
+- Итог: config version 13, quorum 3/3, links 0/1/2 connected на всех узлах,
+  storage active в соответствии с baseline, failed units и новые warning-level
+  записи Corosync отсутствуют.
+- `save force` успешно выполнен на обоих H3C; startup file —
+  `flash:/startup.cfg`.
+
+Откат сетевого этапа описан выше. Для отката Corosync убрать ring1/ring2 и
+интерфейсы 1/2 из копии baseline, установить `config_version` не ниже 14 и
+проверить quorum/link0; не возвращать version 12.
