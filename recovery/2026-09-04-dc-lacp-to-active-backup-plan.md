@@ -1,6 +1,6 @@
 # Переход cross-switch LACP на active-backup в ЦОД
 
-Дата: 2026-09-04. Статус: исполняемый план, изменения сети не начаты.
+Дата: 2026-09-04. Статус: выполняется; AL-OBIT завершён 2026-09-06.
 
 ## Цель
 
@@ -249,6 +249,36 @@ DAG базы активны вне `spb-mx2`. Восстановить DSM confi
 
 ## Следующее действие
 
-Не выполнять сетевые изменения без согласованных окон. Первым техническим
-этапом будет полный prechange snapshot и переход AL-OBIT; Synology — отдельное
-последнее окно после явного подтверждения здоровья Exchange DAG.
+Проверить BMC/консоль PVE1, снять его prechange snapshot и выполнить A2.
+Synology остаётся отдельным последним окном после явного подтверждения здоровья
+Exchange DAG.
+
+## Фактическое выполнение: AL-OBIT, 2026-09-06
+
+- Перед изменением подтверждены мобильный WAN SSH, quorum 3/3, Corosync links
+  0/1/2, HA и storage. RouterOS backup/export созданы заранее.
+- Upper `XGE1/0/54:1` был Unselected и первым выведен из BAGG100; он оставлен
+  standalone access VLAN 1 с описанием
+  `AL-OBIT-sfp1-standalone-active-backup`.
+- `LAG-SW` через WAN-сессию переведён с 802.3ad на active-backup; при первом
+  переносе MAC потерян один начальный ping, связь восстановилась примерно за
+  69 мс.
+- После переноса трафика на upper lower `XGE1/0/54:1` выведен из BAGG100 и
+  оставлен standalone access VLAN 1 с описанием
+  `AL-OBIT-sfp2-standalone-active-backup`.
+- Постоянный primary задан `sfp-sfpplus2` (lower); `sfp-sfpplus1` — standby.
+- Контролируемый shutdown active lower-порта немедленно перевёл трафик на
+  upper. 10/10 ping PVE1 и 5/5 ping Synology прошли без потерь, quorum и все
+  Corosync links сохранились. После `undo shutdown` lower автоматически снова
+  стал active.
+- Оба H3C сохранены в `flash:/startup.cfg`; пустые BAGG100 оставлены на время
+  rollback window.
+- Итоговые RouterOS файлы:
+  `post-al-obit-active-backup-20260906.backup` и `.rsc`.
+- Итоговая проверка: все три WAN SSH доступны; PVE quorum 3/3; Corosync links
+  0/1/2 connected; Synology NFS и остальные ожидаемые storage active; failed
+  units отсутствуют.
+
+Откат AL-OBIT: вернуть `LAG-SW` в 802.3ad и последовательно вернуть оба
+`XGE1/0/54:1` в BAGG100, либо использовать prechange backup при локальном
+доступе. Не восстанавливать полный backup удалённо поверх новых изменений.
