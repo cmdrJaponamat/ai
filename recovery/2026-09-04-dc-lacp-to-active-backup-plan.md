@@ -319,6 +319,35 @@ Exchange DAG.
 
 Окно B с Synology и VM111 не выполнялось и остаётся отдельной работой.
 
+## Фактическая подготовка окна B: Exchange/VM111, 2026-09-06
+
+- Для `admin-al@10.78.3.61` подтверждён парольный SSH-вход, при котором
+  Exchange cmdlets получают рабочий доменный токен и доступ к AD.
+- До maintenance mode все девять активных баз, включая `spb-mdb2`, были
+  смонтированы на SPB-MX3. На SPB-MX2 пять копий имели `Healthy`, queue 0/0;
+  три ранее деградировавшие копии (`MailBoxDB_AL_new`, `mmk`, `Krasnoyarsk`)
+  уже находились в `FailedAndSuspended` с большими очередями. Это исходное
+  состояние, не вызванное текущими работами.
+- Транспортная очередь SPB-MX2 перед переводом была пуста.
+- На SPB-MX2 выполнена штатная последовательность maintenance:
+  `HubTransport=Draining`, `Redirect-Message` на SPB-MX3, запрет активации и
+  перенос активных копий, `DatabaseCopyAutoActivationPolicy=Blocked`,
+  `Suspend-ClusterNode`, `ServerWideOffline=Inactive`.
+- Readback подтвердил: все активные копии на SPB-MX3, activation disabled,
+  policy Blocked, cluster node Paused; активными остались только ожидаемые
+  компоненты Monitoring и RecoveryActionsEnabled.
+- Прямые Windows shutdown API из OpenSSH вернули ошибку интерфейса 1717, а
+  Proxmox HA shutdown не завершился из-за неработающего QEMU Guest Agent.
+  Поэтому создано и запущено однократное задание SYSTEM
+  `Codex-Synology-Maintenance-Shutdown`, вызывающее штатный
+  `shutdown.exe /s /f /t 0`.
+- VM111 штатно остановлена; HA показывает `vm:111 (spb-pve2, stopped)`.
+  Quorum 3/3, Corosync links 0/1/2, storage и Synology NFS остались active,
+  failed units отсутствуют.
+- После следующего запуска SPB-MX2 удалить задание
+  `Codex-Synology-Maintenance-Shutdown`, затем выполнять обратную процедуру
+  выхода из Exchange/DAG maintenance только после полной проверки Synology.
+
 ## Исправление доступа H3C в KeePass, 2026-09-06
 
 - В записи `Сеть/ЦОД H3C S6800` пароль был верным, но имя пользователя
