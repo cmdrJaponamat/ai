@@ -1,6 +1,6 @@
 # Переход cross-switch LACP на active-backup в ЦОД
 
-Дата: 2026-09-04. Статус: выполняется; AL-OBIT завершён 2026-09-06.
+Дата: 2026-09-04. Статус: окно A завершено 2026-09-06; окно B (Synology) ожидает отдельного согласования.
 
 ## Цель
 
@@ -282,3 +282,51 @@ Exchange DAG.
 Откат AL-OBIT: вернуть `LAG-SW` в 802.3ad и последовательно вернуть оба
 `XGE1/0/54:1` в BAGG100, либо использовать prechange backup при локальном
 доступе. Не восстанавливать полный backup удалённо поверх новых изменений.
+
+## Фактическое выполнение: PVE1–PVE3, 2026-09-06
+
+- До изменений подтверждены доступ через HDM/iLO, quorum 3/3, Corosync links
+  0/1/2, HA, storage и отсутствие failed units. На каждом PVE сохранена копия
+  `/etc/network/interfaces` в `/root/interfaces.pre-active-backup-*`.
+- PVE1: lower `XGE1/0/3` первым выведен из BAGG2; `bond0` переведён в
+  active-backup; затем upper `XGE1/0/2` выведен из BAGG1. Постоянный primary —
+  upper `enp61s0f0np0`, lower `enp61s0f1np1` — standby; оба 10 Гбит/с.
+- PVE2: upper `XGE1/0/3` первым выведен из BAGG2; затем lower `XGE1/0/2`
+  выведен из BAGG1. Постоянный primary — lower `enp61s0f0np0`, upper
+  `enp61s0f1np1` — standby; оба 10 Гбит/с.
+- PVE3: controlled flap подтвердил карту `eno1`→upper XGE1/0/4 и
+  `eno2`→lower XGE1/0/4 и восстановил согласование `eno1` со 100 Мбит/с до
+  1 Гбит/с. Оба порта выведены из BAGG3. Постоянный primary — lower `eno2`,
+  upper `eno1` — standby; оба 1 Гбит/с.
+- На всех PVE persistent-конфигурация содержит `bond-mode active-backup`,
+  `bond-miimon 100` и проверенный `bond-primary`; LACP rate и transmit hash
+  удалены. Runtime показывает `primary_reselect always`.
+- Первый reload PVE1/PVE2 временно оставлял в ядре прежний active slave, хотя
+  primary уже был в конфигурации; управление восстановлено через независимый
+  Corosync-link и запись `primary`/`active_slave` в sysfs. Повторные reload
+  persistent-конфигураций прошли по 120/120 проб без потерь.
+- Первый переход PVE3 на standalone upper занял около 3,7 секунды (37 из 160
+  частых ICMP-проб); quorum и Corosync links 1/2 не прерывались.
+- Контролируемое отключение permanent primary проверено на каждом PVE:
+  PVE1, PVE2 и PVE3 дали 10/10 ответов через standby; quorum 3/3, Corosync
+  links 0/1/2 и storage сохранились. После возврата портов primary
+  автоматически выбрался снова.
+- Upper/lower H3C XGE1/0/2–4 оставлены standalone access VLAN 1 с точными
+  описаниями endpoint/slave. BAGG1–3 оставлены пустыми на rollback window.
+  Оба H3C сохранены в `flash:/startup.cfg`.
+- Итоговая приёмка: все slave UP, gateway и Synology доступны с каждого PVE,
+  storage active, HA/watchdog штатны, failed units отсутствуют.
+
+Окно B с Synology и VM111 не выполнялось и остаётся отдельной работой.
+
+## Исправление доступа H3C в KeePass, 2026-09-06
+
+- В записи `Сеть/ЦОД H3C S6800` пароль был верным, но имя пользователя
+  `manage` было неверным. Повторная проверка `manage` и `manege` дала отказ на
+  обоих H3C; `admin` успешно вошёл на `10.78.2.11` и `10.78.2.12`.
+- Имя пользователя исправлено на `admin`, notes актуализированы.
+- До изменения создана копия
+  `/home/admin-al/work/passwords.kdbx.pre-h3c-username-fix-20260906-173407`.
+- Откат: при закрытом KeePassXC вернуть указанную копию, предварительно
+  сохранив более новые изменения базы; предпочтительнее вручную вернуть только
+  username/notes записи, если после копии база менялась.
