@@ -1,341 +1,102 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-02T16:05:46+03:00",
+  "generated_at": "2026-09-18T18:41:16+03:00",
   "freshness_policy": {
     "package_versions_hours": 72,
     "user_services_hours": 24,
     "tool_paths_hours": 72
   },
   "freshness_state": {
-    "package_versions": {
-      "age_hours": 0.0,
-      "ttl_hours": 72,
-      "status": "fresh",
-      "invalidated": false,
-      "invalidation_reason": null,
-      "invalidated_at": null
-    },
-    "user_services": {
-      "age_hours": 0.0,
-      "ttl_hours": 24,
-      "status": "fresh",
-      "invalidated": false,
-      "invalidation_reason": null,
-      "invalidated_at": null
-    },
-    "tool_paths": {
-      "age_hours": 0.0,
-      "ttl_hours": 72,
-      "status": "fresh",
-      "invalidated": false,
-      "invalidation_reason": null,
-      "invalidated_at": null
-    }
+    "package_versions": { "age_hours": 0.0, "ttl_hours": 72, "status": "fresh", "invalidated": false, "invalidation_reason": null, "invalidated_at": null },
+    "user_services": { "age_hours": 0.0, "ttl_hours": 24, "status": "fresh", "invalidated": false, "invalidation_reason": null, "invalidated_at": null },
+    "tool_paths": { "age_hours": 0.0, "ttl_hours": 72, "status": "fresh", "invalidated": false, "invalidation_reason": null, "invalidated_at": null }
   },
   "invalidation": {
     "sections": {
-      "package_versions": {
-        "active": false,
-        "reason": null,
-        "invalidated_at": null
-      },
-      "user_services": {
-        "active": false,
-        "reason": null,
-        "invalidated_at": null
-      },
-      "tool_paths": {
-        "active": false,
-        "reason": null,
-        "invalidated_at": null
-      }
+      "package_versions": { "active": false, "reason": null, "invalidated_at": null },
+      "user_services": { "active": false, "reason": null, "invalidated_at": null },
+      "tool_paths": { "active": false, "reason": null, "invalidated_at": null }
     }
   },
   "system": {
     "hostname": "AL-KUZNETSOV-DE",
-    "kernel": "6.18.18-1-lts",
+    "kernel": "7.2.6-arch2-1",
     "architecture": "x86_64",
     "os_release": {
-      "PRETTY_NAME": "Debian GNU/Linux 13 (trixie)",
-      "NAME": "Debian GNU/Linux",
-      "VERSION_ID": "13",
-      "VERSION": "13 (trixie)",
-      "VERSION_CODENAME": "trixie",
-      "DEBIAN_VERSION_FULL": "13.4",
-      "ID": "debian",
-      "HOME_URL": "https://www.debian.org/",
-      "SUPPORT_URL": "https://www.debian.org/support",
-      "BUG_REPORT_URL": "https://bugs.debian.org/"
+      "PRETTY_NAME": "Arch Linux",
+      "NAME": "Arch Linux",
+      "ID": "arch",
+      "BUILD_ID": "rolling",
+      "HOME_URL": "https://archlinux.org/",
+      "DOCUMENTATION_URL": "https://wiki.archlinux.org/",
+      "SUPPORT_URL": "https://bbs.archlinux.org/",
+      "BUG_REPORT_URL": "https://gitlab.archlinux.org/groups/archlinux/-/issues"
     },
     "shell": "/usr/bin/bash",
     "cwd_default": "/home/admin-al",
     "session_type": "wayland",
-    "current_desktop": "KDE",
-    "package_manager": "apt"
+    "current_desktop": "niri",
+    "desktop_session": "niri",
+    "package_manager": "pacman"
   },
   "tools": {
-    "apt": {
-      "name": "apt",
-      "installed": true,
-      "path": "/usr/bin/apt",
-      "version": "apt 3.0.3 (amd64)",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "systemctl": {
-      "name": "systemctl",
-      "installed": true,
-      "path": "/usr/bin/systemctl",
-      "version": null,
-      "checked_at": "2026-03-20T21:49:33+00:00"
-    },
-    "python3": {
-      "name": "python3",
-      "installed": true,
-      "path": "/usr/bin/python3",
-      "version": "Python 3.14.3",
-      "checked_at": "2026-03-20T21:49:33+00:00"
-    },
-    "codex": {
-      "name": "codex",
-      "installed": true,
-      "path": "/usr/bin/codex",
-      "version": "codex-cli 0.116.0",
-      "checked_at": "2026-03-20T21:49:33+00:00"
-    },
-    "kwin_wayland": {
-      "name": "kwin_wayland",
-      "installed": true,
-      "path": "/usr/bin/kwin_wayland",
-      "version": "kwin 6.3.6",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "plasmashell": {
-      "name": "plasmashell",
-      "installed": true,
-      "path": "/usr/bin/plasmashell",
-      "version": null,
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "alacritty": {
-      "name": "alacritty",
-      "installed": true,
-      "path": "/usr/bin/alacritty",
-      "version": "alacritty 0.16.1 (42f49eeb)",
-      "checked_at": "2026-03-20T21:49:33+00:00"
-    },
-    "rofi": {
-      "name": "rofi",
-      "installed": true,
-      "path": "/usr/bin/rofi",
-      "version": null,
-      "checked_at": "2026-03-20T21:49:33+00:00"
-    },
-    "git": {
-      "name": "git",
-      "installed": true,
-      "path": "/usr/bin/git",
-      "version": "git version 2.53.0",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "node": {
-      "name": "node",
-      "installed": true,
-      "path": "/usr/bin/node",
-      "version": "v25.8.1",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "npm": {
-      "name": "npm",
-      "installed": true,
-      "path": "/usr/bin/npm",
-      "version": "11.11.1",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "pnpm": {
-      "name": "pnpm",
-      "installed": false,
-      "path": null,
-      "version": null,
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "yarn": {
-      "name": "yarn",
-      "installed": false,
-      "path": null,
-      "version": null,
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "cargo": {
-      "name": "cargo",
-      "installed": true,
-      "path": "/home/admin-al/.cargo/bin/cargo",
-      "version": "cargo 1.94.1 (29ea6fb6a 2026-03-24)",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "rustc": {
-      "name": "rustc",
-      "installed": true,
-      "path": "/home/admin-al/.cargo/bin/rustc",
-      "version": "rustc 1.94.1 (e408947bf 2026-03-25)",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "rmkit": {
-      "name": "rmkit",
-      "installed": true,
-      "path": "/home/admin-al/.cargo/bin/rmkit",
-      "version": "rmkit 0.0.21",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "cargo-make": {
-      "name": "cargo-make",
-      "installed": true,
-      "path": "/home/admin-al/.cargo/bin/cargo-make",
-      "version": "cargo-make 0.37.24",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "flip-link": {
-      "name": "flip-link",
-      "installed": true,
-      "path": "/home/admin-al/.cargo/bin/flip-link",
-      "version": "installed; version check cannot find rust-lld unless linker path is set",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "dfu-util": {
-      "name": "dfu-util",
-      "installed": true,
-      "path": "/usr/bin/dfu-util",
-      "version": "dfu-util 0.11",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    },
-    "go": {
-      "name": "go",
-      "installed": true,
-      "path": "/usr/bin/go",
-      "version": null,
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "cmake": {
-      "name": "cmake",
-      "installed": true,
-      "path": "/usr/bin/cmake",
-      "version": "cmake version 4.2.3",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "gcc": {
-      "name": "gcc",
-      "installed": true,
-      "path": "/usr/bin/gcc",
-      "version": "gcc (GCC) 15.2.1 20260209",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "clang": {
-      "name": "clang",
-      "installed": true,
-      "path": "/usr/bin/clang",
-      "version": "clang version 22.1.1",
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "docker": {
-      "name": "docker",
-      "installed": false,
-      "path": null,
-      "version": null,
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    },
-    "podman": {
-      "name": "podman",
-      "installed": false,
-      "path": null,
-      "version": null,
-      "checked_at": "2026-03-20T21:50:39+00:00"
-    }
+    "pacman": { "name": "pacman", "installed": true, "path": "/usr/bin/pacman", "version": "Pacman v7.1.0 - libalpm v15.0.0", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "systemctl": { "name": "systemctl", "installed": true, "path": "/usr/bin/systemctl", "version": "systemd 261 (261.3-1-arch)", "checked_at": "2026-09-18T18:43:19+03:00" },
+    "python3": { "name": "python3", "installed": true, "path": "/usr/bin/python3", "version": "Python 3.14.7", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "codex": { "name": "codex", "installed": true, "path": "/usr/bin/codex", "version": "codex-cli 0.155.0", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "niri": { "name": "niri", "installed": true, "path": "/usr/bin/niri", "version": "26.04", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "alacritty": { "name": "alacritty", "installed": true, "path": "/usr/bin/alacritty", "version": "alacritty 0.17.0 (94e7c887)", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "rofi": { "name": "rofi", "installed": true, "path": "/usr/bin/rofi", "version": "2.0.0 (package version; direct check needs Wayland session)", "checked_at": "2026-09-18T18:43:19+03:00" },
+    "git": { "name": "git", "installed": true, "path": "/usr/bin/git", "version": "git version 2.55.0", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "node": { "name": "node", "installed": true, "path": "/usr/bin/node", "version": "v26.9.0", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "npm": { "name": "npm", "installed": true, "path": "/usr/bin/npm", "version": "12.0.2", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "pnpm": { "name": "pnpm", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" },
+    "yarn": { "name": "yarn", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" },
+    "cargo": { "name": "cargo", "installed": true, "path": "/home/admin-al/.cargo/bin/cargo", "version": "cargo 1.94.1 (29ea6fb6a 2026-03-24)", "checked_at": "2026-09-18T18:42:18+03:00" },
+    "rustc": { "name": "rustc", "installed": true, "path": "/home/admin-al/.cargo/bin/rustc", "version": "rustc 1.94.1 (e408947bf 2026-03-25)", "checked_at": "2026-09-18T18:42:18+03:00" },
+    "rmkit": { "name": "rmkit", "installed": true, "path": "/home/admin-al/.cargo/bin/rmkit", "version": "rmkit 0.0.21", "checked_at": "2026-09-18T18:42:18+03:00" },
+    "cargo-make": { "name": "cargo-make", "installed": true, "path": "/home/admin-al/.cargo/bin/cargo-make", "version": "cargo-make 0.37.24", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "flip-link": { "name": "flip-link", "installed": true, "path": "/home/admin-al/.cargo/bin/flip-link", "version": "unknown (the --version flag is handled by the bundled lld driver)", "checked_at": "2026-09-18T18:42:18+03:00" },
+    "cmake": { "name": "cmake", "installed": true, "path": "/usr/bin/cmake", "version": "cmake version 4.4.3", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "gcc": { "name": "gcc", "installed": true, "path": "/usr/bin/gcc", "version": "gcc (GCC) 16.2.1 20260209", "checked_at": "2026-09-18T18:41:16+03:00" },
+    "go": { "name": "go", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" },
+    "clang": { "name": "clang", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" },
+    "docker": { "name": "docker", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" },
+    "podman": { "name": "podman", "installed": false, "path": null, "version": null, "checked_at": "2026-09-18T18:41:16+03:00" }
   },
   "packages": {
-    "apt": {
-      "installed": true,
-      "version": "3.0.3",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "git": {
-      "installed": true,
-      "version": "1:2.47.3-0+deb13u1",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "python3": {
-      "installed": true,
-      "version": "3.13.5-1",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "nodejs": {
-      "installed": true,
-      "version": "20.20.2-1nodesource1",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "plasma-workspace": {
-      "installed": true,
-      "version": "4:6.3.6-2",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "kwin-wayland": {
-      "installed": true,
-      "version": "4:6.3.6-1",
-      "checked_at": "2026-04-02T16:05:46+03:00"
-    },
-    "dfu-util": {
-      "installed": true,
-      "version": "0.11-3",
-      "checked_at": "2026-04-15T09:25:00+03:00"
-    }
+    "pacman": { "installed": true, "version": "7.1.0.r9.g54d9411-2", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "git": { "installed": true, "version": "2.55.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "python": { "installed": true, "version": "3.14.7-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "nodejs": { "installed": true, "version": "26.9.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "npm": { "installed": true, "version": "12.0.2-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "cmake": { "installed": true, "version": "4.4.3-2", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "gcc": { "installed": true, "version": "16.2.1+r23+gd564253eb6c8-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "niri": { "installed": true, "version": "26.04-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "waybar": { "installed": true, "version": "0.15.0-3", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "swayidle": { "installed": true, "version": "1.9.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "alacritty": { "installed": true, "version": "0.17.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "rofi": { "installed": true, "version": "2.0.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "pipewire": { "installed": true, "version": "1:1.6.8-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "pipewire-pulse": { "installed": true, "version": "1:1.6.8-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "wireplumber": { "installed": true, "version": "0.5.17-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "gnome-keyring": { "installed": true, "version": "1:50.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "gvfs": { "installed": true, "version": "1.60.3-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "xdg-desktop-portal": { "installed": true, "version": "1.22.1-2", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "xdg-desktop-portal-gnome": { "installed": true, "version": "50.0-1", "checked_at": "2026-09-18T18:42:55+03:00" },
+    "xdg-desktop-portal-gtk": { "installed": true, "version": "1.15.3-1", "checked_at": "2026-09-18T18:42:55+03:00" }
   },
   "user_services": {
-    "pipewire.service": {
-      "unit": "pipewire.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "pipewire-pulse.service": {
-      "unit": "pipewire-pulse.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "plasma-kded6.service": {
-      "unit": "plasma-kded6.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "plasma-ksmserver.service": {
-      "unit": "plasma-ksmserver.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "plasma-kwin_wayland.service": {
-      "unit": "plasma-kwin_wayland.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "plasma-plasmashell.service": {
-      "unit": "plasma-plasmashell.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    },
-    "wireplumber.service": {
-      "unit": "wireplumber.service",
-      "load_state": "loaded",
-      "active_state": "active",
-      "sub_state": "running",
-      "unit_file_state": "enabled"
-    }
+    "niri.service": { "unit": "niri.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "static" },
+    "pipewire.service": { "unit": "pipewire.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "disabled" },
+    "pipewire-pulse.service": { "unit": "pipewire-pulse.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "disabled" },
+    "wireplumber.service": { "unit": "wireplumber.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "enabled" },
+    "semaphore-ui.service": { "unit": "semaphore-ui.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "enabled" },
+    "swayidle.service": { "unit": "swayidle.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "enabled" },
+    "waybar-niri.service": { "unit": "waybar-niri.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "disabled" },
+    "gnome-keyring-daemon.service": { "unit": "gnome-keyring-daemon.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "unknown" },
+    "xdg-desktop-portal.service": { "unit": "xdg-desktop-portal.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "unknown" },
+    "xdg-desktop-portal-gnome.service": { "unit": "xdg-desktop-portal-gnome.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "unknown" },
+    "xdg-desktop-portal-gtk.service": { "unit": "xdg-desktop-portal-gtk.service", "load_state": "loaded", "active_state": "active", "sub_state": "running", "unit_file_state": "unknown" }
   }
 }
