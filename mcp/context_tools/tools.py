@@ -1,0 +1,568 @@
+from __future__ import annotations
+
+from pathlib import Path
+import hashlib
+import json
+import re
+
+from db_runtime import DBRepository
+
+
+REPOSITORY = DBRepository()
+
+
+def list_projects() -> list[dict[str, str | int | bool]]:
+    rows = REPOSITORY.fetch_all(
+        """
+        select id, name, path, repo_root, coalesce(recovery_file, '') as recovery_file, active
+        from projects
+        order by id
+        """
+    )
+    return [
+        {
+            "id": int(row["id"]),
+            "name": row["name"],
+            "path": row["path"],
+            "repo_root": row["repo_root"],
+            "recovery_file": row["recovery_file"],
+            "active": bool(row["active"]),
+        }
+        for row in rows
+    ]
+
+
+def get_project(project_name: str) -> dict[str, str | int | bool]:
+    row = REPOSITORY.fetch_one(
+        """
+        select id, name, path, repo_root, coalesce(recovery_file, '') as recovery_file, active
+        from projects
+        where lower(name) = lower(%s)
+        limit 1
+        """,
+        (project_name,),
+    )
+    if row is None:
+        raise ValueError(f"Project not found in ai_context: {project_name}")
+    return {
+        "id": int(row["id"]),
+        "name": row["name"],
+        "path": row["path"],
+        "repo_root": row["repo_root"],
+        "recovery_file": row["recovery_file"],
+        "active": bool(row["active"]),
+    }
+
+
+def list_snapshots(project_name: str, snapshot_type: str | None = None, limit: int = 10) -> list[dict]:
+    project = get_project(project_name)
+    params: list[object] = [project["id"]]
+    snapshot_filter = ""
+    if snapshot_type:
+        snapshot_filter = "and snapshot_type = %s"
+        params.append(snapshot_type)
+    params.append(int(limit))
+
+    rows = REPOSITORY.fetch_all(
+        f"""
+        select id, snapshot_type, coalesce(title, '') as title, payload, created_at::text as created_at
+        from snapshots
+        where project_id = %s
+          {snapshot_filter}
+        order by id desc
+        limit %s
+        """,
+        tuple(params),
+    )
+
+    return [
+        {
+            "id": int(row["id"]),
+            "project_name": project["name"],
+            "snapshot_type": row["snapshot_type"],
+            "title": row["title"],
+            "payload": row["payload"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
+
+
+def record_snapshot(
+    project_name: str,
+    snapshot_type: str,
+    payload: dict,
+    title: str | None = None,
+) -> dict[str, str | int]:
+    project = get_project(project_name)
+    row = REPOSITORY.execute_returning_one(
+        """
+        insert into snapshots (project_id, snapshot_type, title, payload)
+        values (%s, %s, %s, %s::jsonb)
+        returning id
+        """,
+        (
+            project["id"],
+            snapshot_type,
+            title,
+            json.dumps(payload, ensure_ascii=False),
+        ),
+    )
+    if row is None:
+        raise RuntimeError("Snapshot insert returned no id")
+    return {
+        "id": int(row["id"]),
+        "project_name": str(project["name"]),
+        "snapshot_type": snapshot_type,
+    }
+
+
+def _project_root(project_name: str) -> Path:
+    project = get_project(project_name)
+    return Path(str(project["repo_root"]))
+
+
+def _bundle_sources(project_name: str) -> list[dict[str, str]]:
+    project = get_project(project_name)
+    root = Path(str(project["repo_root"]))
+    sources: list[Path] = []
+
+    recovery_file = Path(str(project["recovery_file"]))
+    if recovery_file.is_file():
+        sources.append(recovery_file)
+
+    for relative_path in ("docs/TODO.md", "docs/ARCHITECTURE.md", "README.md"):
+        candidate = root / relative_path
+        if candidate.is_file():
+            sources.append(candidate)
+
+    bundle: list[dict[str, str]] = []
+    for path in sources:
+        bundle.append(
+            {
+                "path": str(path),
+                "title": path.name,
+                "content": path.read_text(encoding="utf-8"),
+            }
+        )
+    return bundle
+
+
+def _content_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _upsert_document(project_id: int, source_type: str, path: str, title: str, content: str) -> None:
+    REPOSITORY.execute(
+        """
+        insert into documents (project_id, source_type, path, title, content, content_hash, metadata, updated_at)
+        values (%s, %s, %s, %s, %s, %s, '{}'::jsonb, now())
+        on conflict (path, content_hash) do update set
+            title = excluded.title,
+            updated_at = now()
+        """,
+        (project_id, source_type, path, title, content, _content_hash(content)),
+    )
+
+
+def _markdown_section(text: str, heading: str) -> str:
+    pattern = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.MULTILINE)
+    match = pattern.search(text)
+    if not match:
+        return ""
+    start = match.end()
+    next_match = re.search(r"^##\s+", text[start:], re.MULTILINE)
+    end = start + next_match.start() if next_match else len(text)
+    return text[start:end].strip()
+
+
+def _extract_bullets(section_text: str, limit: int = 8) -> list[str]:
+    bullets = []
+    for raw_line in section_text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("- "):
+            bullets.append(stripped[2:].strip())
+        elif re.match(r"^\d+\.\s+", stripped):
+            bullets.append(re.sub(r"^\d+\.\s+", "", stripped))
+        if len(bullets) >= limit:
+            break
+    return bullets
+
+
+def _trim_paragraph(section_text: str, max_lines: int = 8) -> str:
+    lines = [line.rstrip() for line in section_text.splitlines() if line.strip()]
+    return "\n".join(lines[:max_lines]).strip()
+
+
+def _extract_section_blocks(markdown_text: str, heading: str) -> list[str]:
+    section = _markdown_section(markdown_text, heading)
+    if not section:
+        return []
+
+    blocks: list[str] = []
+    current: list[str] = []
+    for raw_line in section.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if raw_line.startswith("- "):
+            if current:
+                blocks.append("\n".join(current).strip())
+            current = [stripped[2:].strip()]
+            continue
+        if current:
+            current.append(stripped)
+    if current:
+        blocks.append("\n".join(current).strip())
+    return blocks
+
+
+def _compact_text(text: str, max_lines: int = 3) -> str:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return " ".join(lines[:max_lines]).strip()
+
+
+def _snapshot_summary(snapshot: dict) -> str:
+    snapshot_type = snapshot.get("snapshot_type", "")
+    payload = snapshot.get("payload", {}) or {}
+
+    if snapshot_type == "safe_split_audit":
+        over_limit = payload.get("over_limit_count", 0)
+        top_files = payload.get("top_files", []) or []
+        if top_files:
+            lead = top_files[0]
+            lead_text = f'{lead.get("path", "")} {lead.get("line_count", "")}'.strip()
+        elif payload.get("source") or payload.get("status"):
+            lead_text = f'{payload.get("source", "")} {payload.get("status", "")}'.strip()
+        else:
+            lead_text = ""
+        if over_limit:
+            return f"safe split: {over_limit} файлов выше лимита; крупнейший {lead_text}".strip()
+        return f"safe split: все в лимите; крупнейший {lead_text}".strip()
+
+    if snapshot_type == "refactor_checkpoint":
+        assemble = payload.get("assemble_debug", {}) or {}
+        success = assemble.get("success")
+        branch = payload.get("branch", "")
+        over_limit = len(payload.get("files_over_limit", []) or [])
+        return f"refactor checkpoint: branch={branch}, assemble={'ok' if success else 'fail'}, over_limit={over_limit}"
+
+    if snapshot_type == "recovery_sync_audit":
+        recovery_missing = payload.get("recovery_missing_count", 0)
+        todo_missing = payload.get("todo_missing_count", 0)
+        return f"recovery sync: recovery_missing={recovery_missing}, todo_missing={todo_missing}"
+
+    if snapshot_type == "module_seam_check":
+        seam_count = payload.get("seam_type_count", 0)
+        hard_files = len(payload.get("files_with_hard_dependencies", []) or [])
+        return f"module seam: seam_types={seam_count}, hard_dependency_files={hard_files}"
+
+    title = snapshot.get("title", "") or snapshot_type
+    return title
+
+
+def _latest_snapshot_by_type(snapshots: list[dict], snapshot_type: str) -> dict | None:
+    for item in snapshots:
+        if item.get("snapshot_type") == snapshot_type:
+            return item
+    return None
+
+
+def kb_capture_project_bundle(project_name: str) -> dict:
+    project = get_project(project_name)
+    bundle = _bundle_sources(project_name)
+    for item in bundle:
+        path = item["path"]
+        title = item["title"]
+        content = item["content"]
+        if path.endswith(".ai-recovery.md"):
+            source_type = "recovery"
+        elif path.endswith("TODO.md"):
+            source_type = "todo"
+        elif path.endswith("ARCHITECTURE.md"):
+            source_type = "architecture"
+        else:
+            source_type = "doc"
+        _upsert_document(int(project["id"]), source_type, path, title, content)
+
+    bundle_hash = _content_hash(
+        "".join(f"{item['path']}::{_content_hash(item['content'])}\n" for item in bundle)
+    )
+    return {
+        "project_name": project["name"],
+        "project_id": project["id"],
+        "document_count": len(bundle),
+        "bundle_hash": bundle_hash,
+        "source_refs": [item["path"] for item in bundle],
+    }
+
+
+def _build_projection(project_name: str) -> dict:
+    bundle = _bundle_sources(project_name)
+    by_name = {Path(item["path"]).name: item["content"] for item in bundle}
+    recovery = by_name.get(".ai-recovery.md", "")
+    todo = by_name.get("TODO.md", "")
+    architecture = by_name.get("ARCHITECTURE.md", "")
+
+    purpose = _trim_paragraph(_markdown_section(recovery, "purpose"), max_lines=4)
+    current_state = _trim_paragraph(_markdown_section(recovery, "current_state"), max_lines=8)
+    current_risks = _extract_bullets(_markdown_section(recovery, "current_risks"), limit=6)
+    current_next_steps = _extract_bullets(_markdown_section(recovery, "current_next_steps"), limit=6)
+    architecture_state = _trim_paragraph(_markdown_section(recovery, "architecture_state"), max_lines=6)
+    testing_rule = _trim_paragraph(_markdown_section(recovery, "testing_rule_now"), max_lines=6)
+    todo_p0 = _extract_bullets(_markdown_section(todo, "P0"), limit=6)
+    near_term = _extract_bullets(_markdown_section(architecture, "Near-Term Milestones"), limit=6)
+    hotspots = _extract_bullets(_markdown_section(architecture, "Current Hotspots"), limit=6)
+
+    overview_parts = [part for part in (purpose, current_state.splitlines()[0] if current_state else "") if part]
+    overview = "\n".join(overview_parts).strip()
+    state_summary = "\n".join(part for part in (current_state, architecture_state) if part).strip()
+
+    next_steps = current_next_steps or near_term or todo_p0
+    decisions = []
+    if architecture_state:
+        decisions.append("Архитектурный source of truth и текущие boundaries опираются на .ai-recovery.md.")
+    if "strict quota" in recovery.lower():
+        decisions.append("Strict quota/storage safety признан обязательным redesign до следующего публичного релиза.")
+    if "manual test" in testing_rule.lower() or "ручное тестирование" in testing_rule.lower():
+        decisions.append("Перед заметными runtime/media изменениями обязателен device regression pass.")
+
+    constraints = current_risks[:]
+    if hotspots:
+        constraints.extend(hotspots[:3])
+    if testing_rule:
+        constraints.append("Есть обязательный device regression перед следующими заметными изменениями.")
+
+    source_refs = [item["path"] for item in bundle]
+    bundle_hash = _content_hash(
+        "".join(f"{item['path']}::{_content_hash(item['content'])}\n" for item in bundle)
+    )
+
+    return {
+        "bundle_hash": bundle_hash,
+        "overview": overview,
+        "state_summary": state_summary,
+        "next_steps": next_steps,
+        "decisions": decisions,
+        "constraints": constraints,
+        "source_refs": source_refs,
+    }
+
+
+def kb_bootstrap_projection(project_name: str) -> dict:
+    project = get_project(project_name)
+    bundle_info = kb_capture_project_bundle(project_name)
+    projection = _build_projection(project_name)
+    REPOSITORY.execute(
+        """
+        insert into kb_projections (
+            project_id, bundle_hash, overview, state_summary, next_steps, decisions, constraints, source_refs, updated_at
+        ) values (%s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::jsonb, now())
+        on conflict (project_id) do update set
+            bundle_hash = excluded.bundle_hash,
+            overview = excluded.overview,
+            state_summary = excluded.state_summary,
+            next_steps = excluded.next_steps,
+            decisions = excluded.decisions,
+            constraints = excluded.constraints,
+            source_refs = excluded.source_refs,
+            updated_at = now()
+        """,
+        (
+            project["id"],
+            projection["bundle_hash"],
+            projection["overview"],
+            projection["state_summary"],
+            json.dumps(projection["next_steps"], ensure_ascii=False),
+            json.dumps(projection["decisions"], ensure_ascii=False),
+            json.dumps(projection["constraints"], ensure_ascii=False),
+            json.dumps(projection["source_refs"], ensure_ascii=False),
+        ),
+    )
+    return {
+        "project_name": project["name"],
+        "bundle_hash": projection["bundle_hash"],
+        "document_count": bundle_info["document_count"],
+        "next_steps_count": len(projection["next_steps"]),
+        "decisions_count": len(projection["decisions"]),
+        "constraints_count": len(projection["constraints"]),
+    }
+
+
+def kb_rebuild_project_projection(project_name: str) -> dict:
+    return kb_bootstrap_projection(project_name)
+
+
+def _load_projection(project_name: str) -> dict:
+    project = get_project(project_name)
+    row = REPOSITORY.fetch_one(
+        """
+        select
+            bundle_hash,
+            overview,
+            state_summary,
+            next_steps,
+            decisions,
+            constraints,
+            source_refs,
+            updated_at::text as updated_at
+        from kb_projections
+        where project_id = %s
+        limit 1
+        """,
+        (project["id"],),
+    )
+    if not row:
+        raise ValueError(f"No kb_projection found for project: {project_name}")
+    return {
+        "project_name": project["name"],
+        "bundle_hash": row["bundle_hash"],
+        "overview": row["overview"],
+        "state_summary": row["state_summary"],
+        "next_steps": row["next_steps"],
+        "decisions": row["decisions"],
+        "constraints": row["constraints"],
+        "source_refs": row["source_refs"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def kb_get_project_overview(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "overview": projection["overview"],
+        "source_refs": projection["source_refs"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_project_status(project_name: str, snapshot_limit: int = 5) -> dict:
+    project = get_project(project_name)
+    projection = _load_projection(project_name)
+    recent_snapshots = list_snapshots(project_name, limit=snapshot_limit)
+    return {
+        "project_name": str(project["name"]),
+        "project_id": int(project["id"]),
+        "active": bool(project["active"]),
+        "repo_root": str(project["repo_root"]),
+        "recovery_file": str(project["recovery_file"]),
+        "overview": projection["overview"],
+        "state_summary": projection["state_summary"],
+        "next_steps": projection["next_steps"],
+        "constraints": projection["constraints"],
+        "source_refs": projection["source_refs"],
+        "projection_updated_at": projection["updated_at"],
+        "recent_snapshots": recent_snapshots,
+        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots],
+        "recent_snapshot_summaries": [_snapshot_summary(item) for item in recent_snapshots],
+    }
+
+
+def kb_project_status_compact(project_name: str, snapshot_limit: int = 3) -> dict:
+    project = get_project(project_name)
+    projection = _load_projection(project_name)
+    recent_snapshots = list_snapshots(project_name, limit=max(snapshot_limit, 8))
+    recent_snapshot_summaries = [_snapshot_summary(item) for item in recent_snapshots[:snapshot_limit]]
+    latest_refactor_checkpoint = _latest_snapshot_by_type(recent_snapshots, "refactor_checkpoint")
+    return {
+        "project_name": str(project["name"]),
+        "active": bool(project["active"]),
+        "overview": _compact_text(projection["overview"], max_lines=2),
+        "focus": _compact_text(projection["state_summary"], max_lines=2),
+        "next_steps": projection["next_steps"][:3],
+        "constraints": projection["constraints"][:4],
+        "recent_snapshot_types": [item["snapshot_type"] for item in recent_snapshots[:snapshot_limit]],
+        "recent_snapshot_summaries": recent_snapshot_summaries,
+        "latest_refactor_checkpoint_summary": _snapshot_summary(latest_refactor_checkpoint) if latest_refactor_checkpoint else "",
+        "projection_updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_project_state(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "state_summary": projection["state_summary"],
+        "constraints": projection["constraints"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_next_steps(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "next_steps": projection["next_steps"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_active_tasks(project_name: str, limit: int = 5) -> dict:
+    bundle = _bundle_sources(project_name)
+    by_name = {Path(item["path"]).name: item["content"] for item in bundle}
+    todo = by_name.get("TODO.md", "")
+    recovery = by_name.get(".ai-recovery.md", "")
+
+    p0_blocks = _extract_section_blocks(todo, "P0")
+    current_steps = _extract_bullets(_markdown_section(recovery, "current_next_steps"), limit=max(limit, 1))
+    checkpoint_blocks = _extract_section_blocks(todo, "Current Refactor Checkpoint")
+
+    tasks: list[dict[str, str]] = []
+    for item in p0_blocks[: max(limit, 1)]:
+        tasks.append({"source": "todo_p0", "text": _compact_text(item, max_lines=4)})
+    for item in current_steps[: max(limit - len(tasks), 0)]:
+        tasks.append({"source": "recovery_current_next_steps", "text": item})
+    if len(tasks) < limit and checkpoint_blocks:
+        for item in checkpoint_blocks[: limit - len(tasks)]:
+            tasks.append({"source": "todo_refactor_checkpoint", "text": _compact_text(item, max_lines=3)})
+
+    return {
+        "project_name": project_name,
+        "active_tasks": tasks[:limit],
+        "count": len(tasks[:limit]),
+    }
+
+
+def kb_get_decisions(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "decisions": projection["decisions"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_constraints(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "constraints": projection["constraints"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_get_source_refs(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    return {
+        "project_name": projection["project_name"],
+        "source_refs": projection["source_refs"],
+        "updated_at": projection["updated_at"],
+    }
+
+
+def kb_validate_projection(project_name: str) -> dict:
+    projection = _load_projection(project_name)
+    checks = {
+        "has_overview": bool(projection["overview"].strip()),
+        "has_state_summary": bool(projection["state_summary"].strip()),
+        "has_next_steps": bool(projection["next_steps"]),
+        "has_source_refs": bool(projection["source_refs"]),
+    }
+    return {
+        "project_name": projection["project_name"],
+        "valid": all(checks.values()),
+        "checks": checks,
+        "updated_at": projection["updated_at"],
+    }

@@ -1,0 +1,11 @@
+{
+  "files": [
+    "/home/japonamat/ai/WORKFLOW.md",
+    "/home/japonamat/ai/ASSISTANT_BOOTSTRAP.md",
+    "/home/japonamat/ai/PROJECT_CONTEXTS.md",
+    "/home/japonamat/ai/actions.log"
+  ],
+  "globs": [
+    "/home/japonamat/ai/recovery/*.md"
+  ]
+}
