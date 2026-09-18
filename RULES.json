@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "owner": "japonamat",
+  "version": 2,
+  "owner": "admin-al",
   "language": {
     "default": "ru",
     "strict_default": true,
@@ -15,68 +15,38 @@
   "sources": {
     "primary_control_plane": "~/ai",
     "workflow_file": "~/ai/WORKFLOW.md",
-    "project_registry": "~/ai/PROJECT_CONTEXTS.md",
-    "project_index_db": "~/ai/projects.db",
+    "context_registry": "~/ai/PROJECT_CONTEXTS.md",
     "system_inventory_json": "~/ai/system_inventory.json",
     "system_inventory_human": "~/ai/system_inventory_human.md",
     "actions_log": "~/ai/actions.log",
     "recovery_dir": "~/ai/recovery",
-    "pet_ideas_dir": "~/pet"
+    "imported_archive_dir": "~/ai/archive/imported-home-pc"
+  },
+  "focus": {
+    "primary_domain": "system_administration",
+    "active_repositories": [
+      "~/ai",
+      "~/dotfiles"
+    ],
+    "treat_non_repo_changes_as_system_work": true
   },
   "context_loading": {
-    "do_not_load_all_project_contexts_by_default": true,
-    "check_registry_first": true,
-    "load_only_relevant_project_context": true,
-    "ask_if_project_context_is_ambiguous": true,
+    "do_not_scan_home_without_need": true,
+    "load_bootstrap_and_workflow_first": true,
+    "load_topic_recovery_only_when_relevant": true,
+    "prefer_system_inventory_for_package_service_and_tool_questions": true,
     "prefer_minimal_sufficient_context": true
   },
-  "project_policy": {
-    "project_definition": {
-      "requires_git": true,
-      "requires_remote_owner": "cmdrJaponamat"
-    },
-    "recovery_file": {
-      "required_on_project_creation": true,
-      "path": "project-root/.ai-recovery.md",
-      "format": "markdown",
-      "required_sections": [
-        "project_path",
-        "purpose",
-        "current_state",
-        "key_commands",
-        "next_steps"
-      ]
-    },
-    "registry_update_required": true,
-    "db_is_index_only": true,
-    "db_update_required_on_project_creation": true,
-    "prefer_project_registration_script": true,
-    "markdown_is_source_of_project_context": true,
-    "single_source_of_truth": {
-      "default": "project-root/.ai-recovery.md",
-      "roadmap_is_secondary": true,
-      "prd_is_secondary": true
-    }
-  },
-  "git_policy": {
+  "repo_policy": {
     "commit_discrete_completed_changes": true,
     "push_after_completed_step_if_repo_exists": true,
     "verify_changes_before_commit": true,
     "do_not_bundle_unrelated_changes": true,
-    "ask_before_git_init_if_missing": true,
-    "do_not_init_git_silently": true
-  },
-  "coding_policy": {
-    "maintain_refactor_counter": true,
-    "refactor_counter_threshold": 3,
-    "increment_after_each_discrete_feature_or_fix_step": true,
-    "allow_early_refactor_on_code_smells": true,
-    "record_refactor_in_recovery_context": true,
-    "prefer_separate_refactor_commit_when_git_exists": true
+    "avoid_new_project_scaffolding_without_need": true
   },
   "system_work": {
     "enabled": true,
-    "description": "Любая работа вне обычного проектного git-репозитория считается system work и должна оставлять recovery trail в ~/ai.",
+    "description": "Любая работа вне обычного проектного репозитория считается system work и должна оставлять recovery trail в ~/ai.",
     "system_inventory_is_primary_for_package_checks": true,
     "avoid_rechecking_packages_if_inventory_is_fresh": true,
     "refresh_inventory_after_system_changes": true,
@@ -95,50 +65,30 @@
     ],
     "always_log_to_actions_log": true,
     "nontrivial_changes_require_recovery_note": true,
-    "preferred_control_plane": "~/ai",
     "required_fields": [
       "what_changed",
       "why_changed",
       "verification_status",
       "rollback_strategy_or_note",
-      "relogin_or_reboot_requirement"
+      "relogin_restart_or_reboot_requirement"
     ],
     "scopes": [
       "~/.config",
+      "~/.local/bin",
       "systemd_user_services",
       "shell_config",
       "package_management",
-      "audio_video_input_config",
       "network_config",
+      "ssh",
       "autostart",
       "desktop_environment_or_compositor",
-      "~/.local/bin",
       "machine_bootstrap_and_migration"
-    ],
-    "rollback_policy": {
-      "must_record_rollback_or_explicitly_state_manual_only": true,
-      "git_if_available": true,
-      "manual_or_checklist_if_not_git_managed": true
-    }
+    ]
   },
   "safety": {
     "no_destructive_actions_without_explicit_confirmation": true,
     "no_mass_home_scan_without_need": true,
+    "require_rollback_plan_for_risky_config_changes": true,
     "prefer_registered_context_over_guessing": true
-  },
-  "pet_project_ideas": {
-    "record_worthy_ideas_in_pet": true,
-    "required_fields": [
-      "goal",
-      "why_interesting",
-      "possible_stack",
-      "minimal_mvp"
-    ]
-  },
-  "future_plans": {
-    "keep_environment_migration_in_plans": true,
-    "dotfiles_is_key_migration_project": true,
-    "reduce_hardware_dependency": true,
-    "move_toward_home_relative_paths": true
   }
 }

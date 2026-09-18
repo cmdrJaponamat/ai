@@ -1,0 +1,11 @@
+[Unit]
+Description=Run DNS UDP/53 probes every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Unit=dns-zabbix-sender.service
+
+[Install]
+WantedBy=timers.target

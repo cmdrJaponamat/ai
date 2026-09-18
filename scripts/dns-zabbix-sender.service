@@ -1,0 +1,10 @@
+[Unit]
+Description=Send DNS UDP/53 health probes to Zabbix
+After=zabbix-server.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=zabbix
+Group=zabbix
+ExecStart=/usr/local/sbin/dns_zabbix_sender.sh

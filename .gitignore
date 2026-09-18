@@ -8,3 +8,13 @@ __pycache__/
 mcp/.venv/
 lightrag/.venv/
 lightrag/**/storage/
+
+# Local artifacts and raw device backups may be large or contain credentials.
+staging/
+tmp/
+recovery/**/*.backup
+recovery/**/*.rsc
+recovery/**/*.tbz
+recovery/**/*routeros*.txt
+recovery/**/ideco-msk-etcd.txt
+recovery/*-prechange.txt

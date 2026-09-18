@@ -1,0 +1,8 @@
+[Unit]
+Description=Send MikroTik S2S state to Zabbix LLD
+After=network-online.target zabbix-server.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/mikrotik_s2s_zabbix_sender.sh

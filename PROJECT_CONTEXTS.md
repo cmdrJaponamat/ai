@@ -1,29 +1,21 @@
-# Project Contexts
+# Active Contexts
 
-Date updated: 2026-04-11
-Owner: japonamat
+Date updated: 2026-04-02
+Owner: admin-al
 
-This file is the registry of project-specific recovery/context files.
+This file is the short registry of active repositories and their recovery files on this PC.
 
 Rules:
 
 - Keep only short entries here.
-- Do not paste full project context into this file.
-- Load linked files only when the current task relates to that project.
-- Add a new entry as soon as a new project is created.
+- Do not paste full context into this file.
+- Load linked files only when the current task relates to that repo or topic.
+- Do not treat imported notes from another machine as active context unless they are explicitly revalidated.
 
 ## Entries
 
-- `ai-control-plane` | path: `/home/japonamat/ai` | recovery: `/home/japonamat/ai/.ai-recovery.md`
-- `dotfiles` | path: `/home/japonamat/dotfiles` | recovery: `/home/japonamat/dotfiles/.ai-recovery.md`
-- `db` | path: `/home/japonamat/study/JS/DB/db` | recovery: `/home/japonamat/study/JS/DB/db/.ai-recovery.md`
-- `amur` | path: `/home/japonamat/study/c++/amur` | recovery: `/home/japonamat/study/c++/amur/.ai-recovery.md`
-- `new-amur-test` | path: `/home/japonamat/study/c++/new-amur-test` | recovery: `/home/japonamat/study/c++/new-amur-test/.ai-recovery.md`
-- `machine_learning` | path: `/home/japonamat/study/fifth/Machin_learning` | recovery: `/home/japonamat/study/fifth/Machin_learning/.ai-recovery.md`
-- `ТРПО` | path: `/home/japonamat/study/fifth/ТРПО` | recovery: `/home/japonamat/study/fifth/ТРПО/.ai-recovery.md`
-- `DB` | path: `/home/japonamat/study/forthyear/DB` | recovery: `/home/japonamat/study/forthyear/DB/.ai-recovery.md`
-- `obsidian-career-path` | path: `/home/japonamat/study/obsidian-career-path` | recovery: `/home/japonamat/study/obsidian-career-path/.ai-recovery.md`
-- `web` | path: `/home/japonamat/study/secondyear/webprog/web` | recovery: `/home/japonamat/study/secondyear/webprog/web/.ai-recovery.md`
-- `vkr` | path: `/home/japonamat/study/vkr` | recovery: `/home/japonamat/study/vkr/.ai-recovery.md`
-- `Photo_Trap` | path: `/home/japonamat/pet/projects/Photo_Trap` | recovery: `/home/japonamat/pet/projects/Photo_Trap/.ai-recovery.md`
-- `Dash_Recorder` | path: `/home/japonamat/pet/projects/Dash_Recorder` | recovery: `/home/japonamat/pet/projects/Dash_Recorder/.ai-recovery.md`
+- `ai` | path: `/home/admin-al/ai` | recovery: `/home/admin-al/ai/.ai-recovery.md` | role: control plane, rules, recovery, logs
+- `dotfiles` | path: `/home/admin-al/dotfiles` | recovery: `/home/admin-al/dotfiles/.ai-recovery.md` | role: user environment configs and portable setup
+- `assistant` | path: `/home/admin-al/assistant` | recovery: `/home/admin-al/assistant/.ai-recovery.md` | role: personal assistant workspace for daily notes, todo, and structured capture
+- `ansible_al` | path: `/home/admin-al/ansible_al` | recovery: `/home/admin-al/ansible_al/.ai-recovery.md` | role: private Ansible control repo for enterprise server and future network automation
+- `pve-backup-validator` | path: `/home/admin-al/pve-backup-validator` | recovery: `/home/admin-al/pve-backup-validator/.ai-recovery.md` | role: active architecture-first redesign of backup validation control plane

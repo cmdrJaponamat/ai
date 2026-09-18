@@ -126,6 +126,28 @@ manual server-side operation without a repeatable health-check or rollback.
   administrative-service cards. Ordinary service cards reserve the two-line
   title level and bottom owner link, but remain compact when they do not have
   technical metadata or a secondary action.
+- Deploy `6fa3633` positions an administrative action directly above its owner
+  and expands its technical-information slot. It also gives employee names and
+  roles separate rows, reserves two lines for organisation leads, and uses a
+  compact news-card layout when article bodies/actions are not shown.
+- Deploy `1149640` introduces the relational news model. The deployment creates
+  additive PostgreSQL tables for news, assets, revisions, Telegram sources and
+  message links, webhook idempotency, publication jobs and audit records. It
+  migrates `news-store` exactly once under `news-relational-v1`; the original
+  document remains as an emergency source copy. News cards now open independent
+  portal routes `/news/<slug>` with a full material view.
+- Deploy `fcd35de` adds an inactive-by-default Telegram webhook at
+  `/api/integrations/telegram/webhook` and configuration controls in PortalAL
+  Admin → Integrations. The endpoint returns 404 until an administrator stores
+  a bot token, HTTPS URL and allowed chat, then explicitly confirms activation.
+  The bot token and webhook secret are encrypted with AES-256-GCM using
+  `PORTAL_TELEGRAM_CONFIG_KEY` in the protected production `.env`.
+- Deploy `fe2bd52` adds manual portal-to-Telegram publication. Editors choose a
+  publish-enabled target chat on an already published news page; the server
+  enqueues one idempotent job, and its worker retries failed sends up to five
+  times. Admin → Integrations supports editing or disabling sources and shows
+  queue status. With no bot/chat configured, all external Telegram traffic
+  remains inactive.
 
 ## Rollback
 
