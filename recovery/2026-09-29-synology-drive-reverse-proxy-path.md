@@ -38,40 +38,58 @@ curl -k -I --connect-timeout 10 https://10.78.7.10:5001
 
 Результат: `HTTP/2 200`; счетчик правила на RouterOS увеличился.
 
-## Не выполнено / блокер
+## Выполненная конфигурация
 
 - `SynologyDrive 4.0.3-27892` установлен и запущен вместе с официальными
-  зависимостями `UniversalViewer`, `SynologyApplicationService`, Node.js v20
-  и v22. `Synology Office` намеренно не устанавливался: он не требуется для
-  доступа и ссылок.
-- NAS уже введен в `AURORA-LOGISTICS.LOCAL`: DNS настроен на `10.78.0.254`,
-  а `wbinfo --ping-dc` подтверждает успешный NETLOGON до
-  `spb-dc1-al.aurora-logistics.local` (`10.78.3.50`). AD-группа
-  `AURORA-LOGISTIC\\App-cloud-links` существует и разрешается NAS.
-- Team Folder `share`, ACL группы `App-cloud-links`, политики public
-  links/file requests и Nginx vhost ещё не настроены.
-- SSH доступ `ansible` проверен с эталонным паролем из локального
-  MikroTik-vault; учётная запись входит в группу DSM `administrators`.
+  зависимостями. `Synology Office` намеренно не устанавливался.
+- NAS остаётся в `AURORA-LOGISTICS.LOCAL`; успешный `wbinfo --ping-dc`
+  подтверждён до `spb-dc1-al.aurora-logistics.local` (`10.78.3.50`).
+- `share` включена как единственная Synology Drive Team Folder. Папка
+  `pve-exchange-dag` не индексируется Drive и не публикуется.
+- На `share` выданы RW ACL `@AURORA-LOGISTIC\\App-Cloud-Links` и владельцу
+  `AURORA-LOGISTIC\\admin-al`; исходные административные ACL сохранены.
+- Для public links: только участники AD-группы `App-Cloud-Links`, обязательный
+  пароль, максимальный срок действия 3 дня, HTTPS и базовый URL
+  `https://cloud.aurora-logistics.ru`.
+- На reverse proxy создан `/etc/nginx/conf.d/cloud.aurora-logistics.ru.conf`.
+  Он принимает HTTP только для ACME и перенаправляет его на HTTPS; HTTPS
+  проксирует к `https://10.78.7.10:5001`. Прямого интернет-доступа к DSM нет.
+- Выпущен отдельный Let's Encrypt сертификат
+  `cloud.aurora-logistics.ru`, срок действия до `2026-12-28`; автоматическое
+  продление настроено Certbot.
+- Проверено: запрос через Nginx и по публичному имени возвращает `HTTP 200`.
 
-## Следующий безопасный порядок
+## Осознанно не включено
 
-1. Включить Team Folder `share` и назначить ACL для AD-группы
-   `App-cloud-links`.
-2. Для пользователей Drive включить самостоятельные public links с
-   обязательным паролем, сроком 3 дня и только download/view.
-3. Настроить отдельный file-request destination для внешней загрузки.
-4. Создать Nginx vhost и сертификат для `cloud.aurora-logistics.ru`, затем
-   выполнить внутренний и внешний тесты. Открывать только TCP/443 до Nginx.
+`File Request` (внешняя загрузка на NAS по ссылке) выключен. Для обычной
+выдачи файлов он не нужен: пользователь кладёт файл в `share`, создаёт
+защищённую ссылку, получатель скачивает файл в браузере. Включение File Request
+требует отдельной онлайн-активации расширенных функций Synology Drive.
+
+## Следующие действия
+
+1. Добавить нужных сотрудников в `AURORA-LOGISTIC\\App-Cloud-Links`.
+2. Провести один пилот: сотрудник создаёт ссылку на тестовый файл из `share`,
+   проверяются пароль, срок и URL `cloud.aurora-logistics.ru`.
+3. При необходимости входящей загрузки отдельно согласовать онлайн-активацию
+   расширенных функций Drive и выделить изолированную папку назначения.
 
 ## Откат
 
-На `AL-OBIT`:
+На reverse proxy удалить vhost и перезагрузить Nginx:
+
+```bash
+sudo unlink /etc/nginx/conf.d/cloud.aurora-logistics.ru.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+После этого на `AL-OBIT` отключить transport rule:
 
 ```routeros
 /ip firewall filter disable [find where comment="STORAGE-FILE staged: reverse proxy to Drive"]
 ```
 
-Это немедленно закрывает transport path `10.78.3.1 → 10.78.7.10:5001` и не
-затрагивает SMB, NFS, management NAS или другие опубликованные сервисы.
+Это закрывает внешний веб-доступ и transport path `10.78.3.1 → 10.78.7.10:5001`;
+SMB, NFS, management NAS и другие опубликованные сервисы не затрагиваются.
 
 **Relogin/restart/reboot:** не требуется.
