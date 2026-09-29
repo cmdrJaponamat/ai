@@ -13,8 +13,8 @@
 
 | Роль | NAS интерфейс | IP | H3C / порт | VLAN | Шлюз |
 |---|---|---|---|---|---|
-| Management DSM | `eth1` | `10.78.0.250/24` | без изменений | management | `10.78.0.254` |
-| SMB / Drive / текущий NFS | `eth7` | `10.78.7.10/24` | H3C-1 upper `XGE1/0/54:2` | access 1070 | нет отдельного |
+| Management DSM | `eth1` | `10.78.0.250/24` | без изменений | management | нет default route |
+| SMB / Drive / текущий NFS | `eth7` | `10.78.7.10/24` | H3C-1 upper `XGE1/0/54:2` | access 1070 | `10.78.7.254` |
 | VM storage | `eth4` | `10.78.5.10/24` | H3C-2 lower `XGE1/0/54:2` | access 1050 | нет |
 
 `bond0` удалён. `eth4` и `eth7` больше не являются резервом друг для друга:
@@ -30,7 +30,9 @@
 4. На `eth4` назначен `10.78.5.10/24`.
 5. Нижний H3C `XGE1/0/54:2` переведён из access VLAN1070 в access VLAN1050;
    верхний `XGE1/0/54:2` оставлен access VLAN1070.
-6. Default route остался только на `eth1` через `10.78.0.254`.
+6. После приёмки storage default route перенесён на файловый сервис:
+   `10.78.7.254 dev eth7`. Management `eth1` сохранил прямую connected route
+   к `10.78.0.0/24`.
 
 ## Приёмка
 
@@ -38,6 +40,8 @@
 - PVE1/PVE2 → `10.78.5.10` по `ens2f1`: 5/5;
 - PVE3 → `10.78.7.10`: 5/5;
 - NAS → PVE1 по обоим новым сервисным адресам: 3/3;
+- интернет с NAS через `eth7`: ICMP до `1.1.1.1` 3/3 и HTTPS `200` до
+  `example.com`;
 - на PVE1/PVE2 по 4 iSCSI sessions, все 8 MSA paths
   `active/running/ready`; кластер quorate 3/3;
 - текущий `synology-exchange-dag` NFS datastore через `10.78.7.10` остаётся
