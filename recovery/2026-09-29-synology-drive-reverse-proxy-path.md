@@ -46,6 +46,10 @@ curl -k -I --connect-timeout 10 https://10.78.7.10:5001
   подтверждён до `spb-dc1-al.aurora-logistics.local` (`10.78.3.50`).
 - `share` включена как единственная Synology Drive Team Folder. Папка
   `pve-exchange-dag` не индексируется Drive и не публикуется.
+- В DSM Login Portal для Synology Drive включён штатный псевдоним `drive`.
+  Виртуальный хост Nginx перенаправляет только корень
+  `https://cloud.aurora-logistics.ru/` на `/drive/`, поэтому пользователь
+  сразу открывает Drive, а маршруты публичных ссылок `/d/...` не меняются.
 - На `share` выданы RW ACL `@AURORA-LOGISTIC\\App-Cloud-Links` и владельцу
   `AURORA-LOGISTIC\\admin-al`; исходные административные ACL сохранены.
 - Для public links: только участники AD-группы `App-Cloud-Links`, обязательный
