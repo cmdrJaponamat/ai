@@ -44,21 +44,23 @@ curl -k -I --connect-timeout 10 https://10.78.7.10:5001
   зависимостями `UniversalViewer`, `SynologyApplicationService`, Node.js v20
   и v22. `Synology Office` намеренно не устанавливался: он не требуется для
   доступа и ссылок.
-- NAS ещё не введен в `aurora-logistics.local`; поэтому Team Folder `share`,
-  ACL группы `App-cloud-links`, политики public links/file requests и Nginx
-  vhost ещё не настроены.
+- NAS уже введен в `AURORA-LOGISTICS.LOCAL`: DNS настроен на `10.78.0.254`,
+  а `wbinfo --ping-dc` подтверждает успешный NETLOGON до
+  `spb-dc1-al.aurora-logistics.local` (`10.78.3.50`). AD-группа
+  `AURORA-LOGISTIC\\App-cloud-links` существует и разрешается NAS.
+- Team Folder `share`, ACL группы `App-cloud-links`, политики public
+  links/file requests и Nginx vhost ещё не настроены.
 - SSH доступ `ansible` проверен с эталонным паролем из локального
   MikroTik-vault; учётная запись входит в группу DSM `administrators`.
 
 ## Следующий безопасный порядок
 
-1. Ввести NAS в `aurora-logistics.local` с доменной учётной записью, имеющей
-   право создать компьютер NAS; проверить DNS/NTP/Kerberos.
-3. Установить Synology Drive Server, включить Team Folder `share`.
-4. Для пользователей Drive включить самостоятельные public links с
+1. Включить Team Folder `share` и назначить ACL для AD-группы
+   `App-cloud-links`.
+2. Для пользователей Drive включить самостоятельные public links с
    обязательным паролем, сроком 3 дня и только download/view.
-5. Настроить отдельный file-request destination для внешней загрузки.
-6. Создать Nginx vhost и сертификат для `cloud.aurora-logistics.ru`, затем
+3. Настроить отдельный file-request destination для внешней загрузки.
+4. Создать Nginx vhost и сертификат для `cloud.aurora-logistics.ru`, затем
    выполнить внутренний и внешний тесты. Открывать только TCP/443 до Nginx.
 
 ## Откат
