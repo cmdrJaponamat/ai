@@ -9,6 +9,9 @@ mcp/.venv/
 lightrag/.venv/
 lightrag/**/storage/
 
+# Preserved incident evidence may contain access tokens and personal data.
+incident-evidence/
+
 # Local artifacts and raw device backups may be large or contain credentials.
 staging/
 tmp/
