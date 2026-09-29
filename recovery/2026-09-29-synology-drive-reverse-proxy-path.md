@@ -40,18 +40,20 @@ curl -k -I --connect-timeout 10 https://10.78.7.10:5001
 
 ## Не выполнено / блокер
 
-- Пакет Synology Drive, ввод NAS в AD, Team Folder `share`, политики ссылок
-  и Nginx vhost ещё не настраивались.
-- Сохраненная DSM учетная запись `ansible` на `10.78.0.250` отклоняет
-  аутентификацию. Повторная проверка 2026-09-29: эталонный пароль
-  automation-учетки MikroTik также отклонен по SSH. До восстановления
-  административного входа не менять настройки DSM и не публиковать
-  `cloud.aurora-logistics.ru`.
+- `SynologyDrive 4.0.3-27892` установлен и запущен вместе с официальными
+  зависимостями `UniversalViewer`, `SynologyApplicationService`, Node.js v20
+  и v22. `Synology Office` намеренно не устанавливался: он не требуется для
+  доступа и ссылок.
+- NAS ещё не введен в `aurora-logistics.local`; поэтому Team Folder `share`,
+  ACL группы `App-cloud-links`, политики public links/file requests и Nginx
+  vhost ещё не настроены.
+- SSH доступ `ansible` проверен с эталонным паролем из локального
+  MikroTik-vault; учётная запись входит в группу DSM `administrators`.
 
 ## Следующий безопасный порядок
 
-1. Восстановить или подтвердить административный вход DSM для `ansible`.
-2. Ввести NAS в `aurora-logistics.local`, проверить DNS/NTP/Kerberos.
+1. Ввести NAS в `aurora-logistics.local` с доменной учётной записью, имеющей
+   право создать компьютер NAS; проверить DNS/NTP/Kerberos.
 3. Установить Synology Drive Server, включить Team Folder `share`.
 4. Для пользователей Drive включить самостоятельные public links с
    обязательным паролем, сроком 3 дня и только download/view.
