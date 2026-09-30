@@ -173,3 +173,25 @@ incident-evidence/2026-09-29-synology-public-exposure/nas-2026-09-30-1108/
 live-account-logs.tgz
 SHA-256: 9d89bb777ba83a9e2a09b112c58c778a6113f868ff753296030463bde9572421
 ```
+
+### Обратимый эксперимент accountdb-cache — 2026-09-30
+
+Read-only проверка показала: системные RAID `md0`/`md1` здоровы (`12/12`),
+локальные члены `administrators` хранятся в `/etc/group`, а доменные SQLite
+кэши `/volume1/@accountdb/.db.domain_{user,group}_full` проходят
+`PRAGMA integrity_check` (`ok`). Поэтому не удалять и не пересоздавать cache
+image/SQLite-файлы: для этого нет подтверждения повреждения.
+
+Допустимый первый repair-step — только штатный `systemctl restart
+accountdb-cache.service`: он размонтирует и смонтирует существующий cache,
+не редактируя `/etc/group` и не удаляя данные. Возможен краткий сбой
+разрешения доменных пользователей SMB/Drive. Откат: повторный
+`systemctl restart accountdb-cache.service`; если проверка после рестарта
+ухудшится, не предпринимать дальнейших попыток и переходить к Support/Mode 2.
+
+В 11:18 MSK этот рестарт выполнен. `accountdb-cache.service` активен, cache
+смонтирован; `wbinfo --ping-dc` успешен. Обе SQLite базы доменного cache
+прошли `PRAGMA integrity_check` (`ok`). После повторной проверки `ansible`
+сохраняет SSH/admin-доступ, а `/etc/group` содержит
+`administrators:x:101:ansible,admin-al`. Это не является доказательством
+окончательного устранения сбоя; cache не удалялся и не пересоздавался.
