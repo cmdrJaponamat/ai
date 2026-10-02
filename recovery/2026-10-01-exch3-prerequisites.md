@@ -84,9 +84,22 @@ Exchange Server 2019 для последующего добавления в с�
   одновременно подключаемым Windows shared LUN. Если в будущем появится
   действительно общий writable-диск, политику нужно вернуть `OfflineShared`.
 - Завершён `H:`: label `EXCH-MAINT`, NTFS, allocation unit 64 KiB, Healthy.
-- Единственный активный процесс формирует `G:` `EXCH-LOGS` как ReFS/64 KiB;
-  процесс не прерывать и не запускать параллельный formatter. Disk1 содержит
-  только пустой GPT partition без ФС, Disk2 пока RAW; они ожидают очереди.
+- ReFS formatting of G was stopped because it did not progress. A subsequent
+  NTFS attempt was also interrupted before a filesystem was created. After the
+  later confirmed reset there is no active DiskPart process: Disk1 and Disk3
+  contain only empty GPT partitions without a filesystem, Disk2 is RAW/offline,
+  and H remains healthy NTFS/64 KiB.
+
+## Проверка PVE/NAS пути: 2026-10-02 10:04 MSK
+
+- PVE1 → `10.78.5.10` passed ICMP 5/5 with 0% loss and 0.067 ms average.
+- The new Synology target is `LOGGED_IN`; `/dev/sde` is present at 26 TiB and
+  PVE kernel logs contain no error for this device.
+- A direct 32 MiB read from `/dev/sde`, plus a direct write/read to a fresh
+  64 MiB temporary LV in `vg_synology_exch3`, succeeded. The LV was removed.
+- This demonstrates that the current NAS/L2/iSCSI/PVE block path is working at
+  a basic level. It is not a certification of sustained performance; resume
+  guest formatting only one operation at a time.
 
 ## Блокер установки
 
