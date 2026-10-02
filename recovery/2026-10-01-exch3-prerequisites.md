@@ -101,6 +101,14 @@ Exchange Server 2019 для последующего добавления в с�
   a basic level. It is not a certification of sustained performance; resume
   guest formatting only one operation at a time.
 
+## Имена томов MX3/MX4
+
+MX3 uses the following existing convention: `E:` `DB`, `F:`
+`DB-Murmansk`, `G:` `DB-Krasnoyarsk`, `H:` `SystemMailboxesDB`.
+MX4 `H:` has been renamed to `SystemMailboxesDB` and remains NTFS/64 KiB,
+Healthy. When the remaining empty MX4 disks are formatted through RDP, use the
+same E/F/G labels respectively.
+
 ## Блокер установки
 
 `admin-al` имеет `Organization Management`, а secure channel с доменом
