@@ -120,6 +120,21 @@ more automated DiskPart scripts over SSH. Perform a clean VM reboot, then use
 the local interactive Disk Management console through RDP to format E/F/G as
 NTFS, 64 KiB, with the MX3-compatible labels.
 
+## Cold reconnect: 2026-10-02 10:42 MSK
+
+At user request, VM135 was stopped and only its four non-boot data disks were
+cold-reconnected. PVE config backup: `/root/135.conf.pre-data-disk-reconnect-20261002`.
+`qm disk unlink` without `--force` first preserved each disk as `unused`; the
+same LVs were then reattached with the original cache=none/discard/iothread
+settings. No LV was deleted and `virtio0` was not touched.
+
+After the restart, Windows reports all four data disks online/writable/Healthy.
+This confirms the reconnect, but does not clear their on-disk metadata: Disk1
+and Disk3 still have empty GPT basic partitions, Disk2 is RAW, and H remains
+the healthy `SystemMailboxesDB` NTFS volume. To discard that stale metadata,
+the user must explicitly authorize deletion/recreation of the named four
+non-boot LVs; do not infer that authorization from a reconnect.
+
 ## Блокер установки
 
 `admin-al` имеет `Organization Management`, а secure channel с доменом
