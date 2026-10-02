@@ -135,6 +135,33 @@ the healthy `SystemMailboxesDB` NTFS volume. To discard that stale metadata,
 the user must explicitly authorize deletion/recreation of the named four
 non-boot LVs; do not infer that authorization from a reconnect.
 
+## Чистое пересоздание data-дисков: 2026-10-02 10:58 MSK
+
+Владелец явно подтвердил удаление и пересоздание только четырёх пустых
+PVE data-LV. VM135 была штатно остановлена, конфигурация сохранена в
+`/root/135.conf.pre-data-lv-recreate-20261002`, после чего физически удалены
+только `scsi1`–`scsi4` (`vm-135-disk-1`–`-4`). `virtio0`
+(`vm-135-disk-0`, 200 GiB) не удалялся и остался загрузочным.
+
+Созданы новые диски с теми же назначениями и параметрами:
+
+- `scsi1`: 7800 GiB;
+- `scsi2`: 1700 GiB;
+- `scsi3`: 600 GiB;
+- `scsi4`: 20 GiB;
+- для всех: `cache=none,discard=on,iothread=1`.
+
+После запуска VM Windows проверен только чтением: Disk 1–4 имеют состояние
+`RAW`, `Online`, `Healthy`, `IsReadOnly=False`, не содержат разделов и не
+имеют томов E:/F:/G:/H:. Это подтверждает, что прежние GPT/NTFS-метаданные
+очищены. Никакие команды Windows по инициализации, форматированию, назначению
+букв, label или SAN-policy в этом шаге не выполнялись.
+
+Откат удалённых старых томов невозможен: они были физически удалены с явным
+подтверждением и не содержали Exchange или пользовательских данных. Если
+понадобится повторить подготовку до появления данных, можно аналогично
+пересоздать только новые `scsi1`–`scsi4`.
+
 ## Блокер установки
 
 `admin-al` имеет `Organization Management`, а secure channel с доменом
