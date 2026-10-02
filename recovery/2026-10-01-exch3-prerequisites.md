@@ -109,6 +109,17 @@ MX4 `H:` has been renamed to `SystemMailboxesDB` and remains NTFS/64 KiB,
 Healthy. When the remaining empty MX4 disks are formatted through RDP, use the
 same E/F/G labels respectively.
 
+## Ограничение Windows Storage на MX4
+
+Even after `OnlineAll`, DiskPart stalled both on formatting and later on a
+short `assign letter=G` command for an empty partition. The operation was
+stopped; no letter or filesystem was created. This is now narrowed to the
+guest Windows Storage/DiskPart state: PVE-side direct 64 KiB synchronous I/O
+to the same Synology VG passed at ~200 MiB/s with ~0.2 ms latency. Do not run
+more automated DiskPart scripts over SSH. Perform a clean VM reboot, then use
+the local interactive Disk Management console through RDP to format E/F/G as
+NTFS, 64 KiB, with the MX3-compatible labels.
+
 ## Блокер установки
 
 `admin-al` имеет `Organization Management`, а secure channel с доменом
