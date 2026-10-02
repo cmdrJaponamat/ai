@@ -73,6 +73,21 @@ Exchange Server 2019 для последующего добавления в с�
   первый том. Не прерывать и не запускать второй форматирующий процесс.
   Диски 2–4 остались RAW/offline, то есть ещё не изменялись.
 
+## Коррекция SAN-policy: 2026-10-02 09:20 MSK
+
+- Диагностика `diskpart san` подтвердила `Offline Shared` (`SanPolicy=2`).
+  Это объясняет, почему Windows после загрузки автоматически переводила
+  virtual SCSI-диски VM135 offline/read-only.
+- После двух подтверждённых владельцем forced reset VM135 для снятия
+  прерванных DiskPart процессов применено `san policy=OnlineAll`. Для этой
+  VM это корректно: её четыре виртуальных data-диска не являются одним
+  одновременно подключаемым Windows shared LUN. Если в будущем появится
+  действительно общий writable-диск, политику нужно вернуть `OfflineShared`.
+- Завершён `H:`: label `EXCH-MAINT`, NTFS, allocation unit 64 KiB, Healthy.
+- Единственный активный процесс формирует `G:` `EXCH-LOGS` как ReFS/64 KiB;
+  процесс не прерывать и не запускать параллельный formatter. Disk1 содержит
+  только пустой GPT partition без ФС, Disk2 пока RAW; они ожидают очереди.
+
 ## Блокер установки
 
 `admin-al` имеет `Organization Management`, а secure channel с доменом
