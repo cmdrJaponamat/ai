@@ -12,8 +12,10 @@
    `Succeeded`, `NumberOfLogsLost=0`.
 3. На MX4 отменён временный запрет активации:
    `DatabaseCopyAutoActivationPolicy=Unrestricted`.
-4. У Send Connector `aurora-logistics.ru` и `KSMG` источниками оставлены
-   только `SPB-MX3` и `SPB-MX4`.
+4. Первоначально в источники Send Connector `aurora-logistics.ru` и `KSMG`
+   были добавлены `SPB-MX3` и `SPB-MX4`. Это вызвало отказ KSMG при relay
+   через MX4; 2026-10-07 оба коннектора были возвращены к единственному
+   источнику `SPB-MX3`.
 5. MX2 переведён в maintenance:
    `DatabaseCopyAutoActivationPolicy=Blocked`,
    `DatabaseCopyActivationDisabledAndMoveNow=True`, HubTransport сначала
@@ -34,6 +36,9 @@
 - Transport queues MX3/MX4 пусты.
 - Nginx обратного прокси указывает Exchange HTTP-проксирование на MX3
   (`10.78.3.62`), без ссылки на MX2.
+- Внешняя почта пока должна отправляться через MX3. KSMG `10.78.3.155`
+  не считает MX4 (`10.78.3.63`) доверенным relay-клиентом и отвечает
+  `554 5.7.1 Relay access denied`.
 
 ## Известные ограничения
 
@@ -63,3 +68,10 @@
 
 До отдельного решения об окончательном списании VM111 и её старых дисков не
 удалять.
+
+## Будущая балансировка внешней почты
+
+До добавления MX4 в `SourceTransportServers` необходимо на KSMG разрешить
+SMTP relay от `10.78.3.63`, затем выполнить контролируемую внешнюю отправку.
+Только после успешного теста допустимо добавить MX4 в source servers обоих
+коннекторов.
