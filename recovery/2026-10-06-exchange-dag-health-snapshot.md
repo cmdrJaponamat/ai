@@ -81,3 +81,28 @@ Get-DatabaseAvailabilityGroup -Status
 Критерий завершения именно текущего этапа: `mmk\SPB-MX4` становится `Healthy`
 с устойчиво нулевыми очередями. Это не означает автоматическое устранение
 старых failed/suspended копий MX2: они требуют отдельного change-plan.
+
+## Повторная проверка — 2026-10-07
+
+Повторный read-only срез на MX4 подтвердил, что текущий full seed завершён:
+
+- `mmk\SPB-MX4` имеет статус `Healthy`, `CopyQueueLength=0`,
+  `ReplayQueueLength=0`;
+- также `Healthy` с нулевыми или единичными replay-очередями копии
+  `Admins`, `fired`, `kras`, `Krasnoyarsk`, `MailBoxDB_AL_new`, `spb-mdb2` и
+  `SystemMailboxesDB` на MX4;
+- активная `Mailbox Database 1610298417` остаётся на MX4 и является
+  единственной наблюдаемой копией;
+- `DAG02` теперь содержит только `SPB-MX3` и `SPB-MX4`; оба operational.
+  Запрос статуса копий для `SPB-MX2` возвращает, что этот сервер больше не
+  является сервером mailbox-баз Exchange, то есть старые проблемные копии MX2
+  не входят в текущую топологию DAG;
+- `Test-ReplicationHealth -Identity SPB-MX4` проходит проверки кластера,
+  сети, quorum, сервисов и журналов. `DatabaseAvailability` и
+  `DatabaseRedundancy` продолжают сигнализировать только о единственной копии
+  `Mailbox Database 1610298417`.
+
+Следствие: bulk-replication не является блокером первой волны AD Sites, но
+единственная копия `Mailbox Database 1610298417` сохраняет общий риск почтовой
+платформы. В одном change-window не совмещать AD Sites с переносом/активацией
+этой базы или изменением DAG.
