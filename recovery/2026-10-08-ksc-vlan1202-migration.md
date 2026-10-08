@@ -43,6 +43,19 @@ KSC перенесён с legacy untagged bridge в `VLAN1202` (`DC-SECURITY-MGM
 `KSCWebConsole` и `KSCSvcWebConsole` запрос к IAM вернул ожидаемый `401
 unauthorized`, а `/login` перестал отдавать страницу недоступности IAM.
 
+## Публикация через nginx
+
+Прямой доступ к KSC на `:8080` отдаёт штатный самоподписанный сертификат
+KSC, поэтому он не предназначен для браузера. На nginx `10.78.3.1` выпущен
+Let's Encrypt сертификат для `ksc.aurora-logistics.ru` (действует до
+2027-01-06) и создан HTTPS vhost. Он проксирует Web Console на
+`10.78.20.98:8080` и IAM-маршруты `/oauth2/`, `/flow/`, `/iam/` на
+`10.78.20.98:4444`, сохраняя внешний URL без внутренних портов. В KSC
+`socketUrl` изменён с `//ksc.aurora-logistics.ru:8080` на
+`//ksc.aurora-logistics.ru`; прежний `config.json` сохранён как
+`config.json.pre-nginx-public-20261008`. Открывать следует
+`https://ksc.aurora-logistics.ru/`, не IP-адрес и не `:8080`.
+
 ## Откат
 
 Через PVE console VM113 восстановить прежний файл сети, снять VLAN tag 1202,
