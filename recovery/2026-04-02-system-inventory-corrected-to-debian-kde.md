@@ -1,5 +1,7 @@
 # System Inventory Corrected To Debian KDE
 
+> Историческая заметка от 2026-04-02. Она описывает предыдущее состояние этой машины и не является актуальным контекстом: текущая ОС — Arch Linux (rolling) с Wayland/niri и `pacman`; источник истины — `~/ai/system_inventory.json`.
+
 ## problem_statement
 
 Базовый контекст в `~/ai/system_inventory.json` и `~/ai/system_inventory_human.md` ошибочно описывал этот ПК как Arch Linux с `niri`, хотя фактически это Debian 13 с KDE Plasma.
