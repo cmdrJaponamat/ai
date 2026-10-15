@@ -50,9 +50,11 @@ Thunderbird сообщал об отказе пароля для Exchange IMAP, 
 
 ## Откат
 
-Закрыть Thunderbird, изменить строку `Default` в секции `Install...` файла
-`~/.thunderbird/profiles.ini` с `exchange-clean` на
-`27fy9wau.default-release`, затем открыть Thunderbird обычным способом.
+Обычный запуск Thunderbird уже возвращён к исходному профилю
+`default-release` (`27fy9wau.default-release`). Для повторного переключения
+на чистый профиль изменить строку `Default` в секции `Install...` файла
+`~/.thunderbird/profiles.ini` с `27fy9wau.default-release` на
+`exchange-clean`, затем открыть Thunderbird обычным способом.
 Для удаления чистого профиля позднее сначала закрыть Thunderbird, затем удалить
 только секцию `exchange-clean` из `profiles.ini` и каталог
 `~/.thunderbird/exchange-clean`; резервную копию старого профиля сохранять до
