@@ -2,7 +2,8 @@
 
 **Дата:** 2026-10-15  
 **Узел:** `spb-file` / `10.78.2.210`, Synology RS2421RP+  
-**Статус:** RAID10 и Btrfs-том созданы; размещение Exchange данных отложено до проверки дисков.
+**Статус:** RAID10 и Btrfs-том созданы; `DB-FIRED-01` размещена на новой
+полке. Архивные базы остаются на SPB-NAS1.
 
 ## Причина
 
@@ -38,6 +39,19 @@ RAID6/NFS SPB-FILE. При MRS и MRM это создавало неприемл
    dedupe, через `SYNO.Storage.CGI.Volume deploy_unused`.
 7. VM135 запущена обратно. Все три базы смонтированы, Exchange IS, FastSearch,
    HostController и MRS работают; MX4 не использует SPB-FILE.
+8. Владелец явно принял риск статуса DSM `has_unverified_disk` как следствие
+   давно используемых несертифицированных Synology HDD, а не как признак
+   деградации. Создан отдельный DSM share `/volume1/exchange-fired-r10` и
+   export NFSv4.1 только для `10.78.4.11` и `10.78.4.12`; на PVE создан
+   отдельный storage-id `spb-file-fired-r10` (`10.78.4.210`).
+9. Для VM135 созданы только два новых raw-диска на этом storage (`virtio7`
+   900 GiB и `virtio8` 150 GiB, `cache=none`, `iothread=1`, `backup=0`,
+   `discard=ignore`). В Windows это `M:` и `N:`, NTFS/4 KiB.
+10. `DB-FIRED-01` штатно размонтирована, EDB и журналы скопированы из
+    временных `W:/X:`. До mount проверено равенство EDB
+    `17,314,086,912` байт и журнала; путь переключён только через
+    `Move-DatabasePath -ConfigurationOnly`. База успешно mounted на
+    `M:\DB-FIRED-01\DB-FIRED-01.edb` / `N:\DB-FIRED-01\Logs`.
 
 ## Проверка
 
@@ -46,8 +60,11 @@ RAID6/NFS SPB-FILE. При MRS и MRM это создавало неприемл
 - Все шесть HDD `normal`; система RAID1 `md0`/`md1` сохранилась.
 - `DB-ARCH-01`, `DB-ARCH-02`, `DB-FIRED-01`: `Mounted=True` по новым путям
   SPB-NAS1.
-- DSM пока показывает `has_unverified_disk`. Это не degraded RAID, но
-  является стоп-условием для размещения данных до отдельной проверки дисков.
+- DSM показывает `has_unverified_disk`; RAID при этом не degraded. Владелец
+  принял этот риск как ожидаемое предупреждение о несертифицированных HDD.
+- `DB-FIRED-01` mounted на новой RAID10 полке. После mount появились два
+  штатных новых Exchange log-файла, поэтому целевой каталог журналов больше
+  исходного на 1,212,416 байт; исходные `W:/X:` намеренно сохранены.
 
 ## Откат
 
@@ -57,11 +74,9 @@ SPB-NAS1 RAID10; восстановление при отказе — из их 
 
 ## Следующие шаги
 
-1. Выполнить и подтвердить DSM disk verification/SMART для всех шести HDD,
-   дождаться исчезновения `has_unverified_disk`.
-2. Создать на `/volume1` новый export для PVE1/PVE2 по SFP storage-путям,
-   с новым storage-id (не восстанавливать старые definitions).
-3. Создать новые virtual disks и переносить archive/fired последовательно,
-   с application-aware backup и проверкой mount после каждой БД.
+1. Дождаться успешной свежей application-aware Veeam-точки для MX4 с уже
+   новым путём `DB-FIRED-01`; до этого не удалять временные `W:/X:`.
+2. `DB-ARCH-01` и `DB-ARCH-02` оставить на SPB-NAS1 (`J:/K:`, `Y:/Z:`) до
+   отдельного решения и окна. На новую полку их не переносить автоматически.
 
 Reboot NAS и PVE не требуется. Перезапуск MX4 уже выполнен штатно.
