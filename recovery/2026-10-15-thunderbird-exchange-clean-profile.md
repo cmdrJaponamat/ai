@@ -19,6 +19,8 @@ Thunderbird сообщал об отказе пароля для Exchange IMAP, 
   `~/.thunderbird/27fy9wau.default-release.backup-20261015-090739`.
 - Создан отдельный пустой профиль `exchange-clean` в
   `~/.thunderbird/exchange-clean`.
+- После проверки, что прежний экземпляр Thunderbird закрыт, `exchange-clean`
+  назначен профилем по умолчанию для обычного запуска Thunderbird.
 - Он запущен изолированно как transient user service
   `thunderbird-exchange-clean.service` с командой
   `thunderbird --no-remote -P exchange-clean`; это сохраняет окно после
@@ -48,10 +50,11 @@ Thunderbird сообщал об отказе пароля для Exchange IMAP, 
 
 ## Откат
 
-Закрыть Thunderbird с профилем `exchange-clean` и запустить Thunderbird
-обычным способом: активным останется прежний `default-release`. Для удаления
-чистого профиля позднее сначала закрыть Thunderbird, затем удалить только
-секцию `exchange-clean` из `profiles.ini` и каталог
+Закрыть Thunderbird, изменить строку `Default` в секции `Install...` файла
+`~/.thunderbird/profiles.ini` с `exchange-clean` на
+`27fy9wau.default-release`, затем открыть Thunderbird обычным способом.
+Для удаления чистого профиля позднее сначала закрыть Thunderbird, затем удалить
+только секцию `exchange-clean` из `profiles.ini` и каталог
 `~/.thunderbird/exchange-clean`; резервную копию старого профиля сохранять до
 подтверждённой стабилизации.
 
