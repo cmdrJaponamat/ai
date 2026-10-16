@@ -119,3 +119,18 @@ RAID6/NFS SPB-FILE. При MRS и MRM это создавало неприемл
   больше не останавливает заявку.
 
 Reboot NAS и PVE не требуется. Перезапуск MX4 уже выполнен штатно.
+
+## Аварийное заполнение журнала DB-FIRED-01, 2026-10-16
+
+- После массового запуска MRS `X:` (150 GiB) заполнился: 0 GiB свободно,
+  149.7 GiB журналов и 153 294 файла. `DB-FIRED-01` размонтировалась;
+  `Suspend-MoveRequest` во время offline закономерно вернул
+  `MailboxOfflineException`.
+- Причина: Veeam scope оставался на прежних M:/N: и не включал новый X:,
+  поэтому application-aware backup не мог усечь журналы DB-FIRED-01.
+- Для сохранения всех журналов, без circular logging и без удаления файлов,
+  PVE-диск VM135 `virtio10` на SPB-NAS1 увеличен 150 -> 300 GiB; GPT/NTFS X:
+  расширен online. Exchange успешно выполнил recovery и mounted базу.
+  После расширения свободно около 150 GiB.
+- Все 23 MoveRequest получили `Suspend=True`. Их не возобновлять до
+  успешной application-aware Veeam-точки со scope `J:, K:, Y:, Z:, W:, X:`.
