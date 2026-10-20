@@ -21,3 +21,9 @@
 - 12:01 MSK: DB-ARCH-02 добавлена на MX3; Healthy, обе очереди 0. DB-ARCH-01 добавлена и находится в Seeding, 30%, ошибок нет; команда выполняется в гостевой системе VM135, QGA PID 33144 (опрос `qm guest exec-status 135 33144`). DB-FIRED-01 ещё не добавлялась. Exchange предупреждает о необходимости перезапустить службу банка данных после добавления баз; перезапуск не выполнялся.
 - 12:46 MSK: обе архивные копии на MX3 Healthy, очереди копирования и воспроизведения 0. По первоначальному поручению запущено добавление копии DB-FIRED-01 на MX3; она находится в Seeding. Активные копии трёх баз Mounted на MX4. На момент проверки все 14 баз Mounted и 13 ранее добавленных пассивных копий Healthy. Veeam и MoveRequest не менялись.
 - Выполняющаяся команда в VM135: QGA PID 14800; проверять `qm guest exec-status 135 14800` и состояние копии через `Get-MailboxDatabaseCopyStatus DB-FIRED-01\SPB-MX3`.
+
+## Итоговая проверка
+
+- 20.10.2026: DB-FIRED-01\\SPB-MX3 завершила посев и Healthy; очереди копирования и воспроизведения 0. DB-ARCH-01\\SPB-MX3 и DB-ARCH-02\\SPB-MX3 также Healthy, очереди 0. Все три активные копии Mounted на SPB-MX4.
+- В DAG 14 Mounted и 14 Healthy копий. `Test-ReplicationHealth SPB-MX3` прошёл все проверки, включая DatabaseRedundancy, DatabaseAvailability, DBLogCopyKeepingUp и DBLogReplayKeepingUp. Оба сервера DAG operational: SPB-MX3 и SPB-MX4.
+- Ни Veeam, ни MoveRequest, ни переключение активных баз в рамках этой операции не изменялись.
