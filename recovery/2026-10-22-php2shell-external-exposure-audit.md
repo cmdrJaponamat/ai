@@ -51,9 +51,9 @@ location запрещает произвольный внешний IP. Это �
 
 | Ресурс (публичная точка) | Доступ из интернета | Конечная система / веб-стек | Версия приложения или фреймворка | PHP / вывод по PHP2Shell |
 | --- | --- | --- | --- | --- |
-| `api.aurora-logistics.ru`, `mesh.aurora-logistics.ru`, `rmm.aurora-logistics.ru` → `85.114.6.214` | Открыт | nginx → `10.78.3.158`; Tactical RMM | Не подтверждена: SSH-проверка остановлена из-за несовпадения host key | Не подтверждено; нужен повторный доступ после сверки fingerprint, не следует считать стек PHP по названию продукта. |
+| `api.aurora-logistics.ru`, `mesh.aurora-logistics.ru`, `rmm.aurora-logistics.ru` → `85.114.6.214` | Открыт | nginx → `spb-tacticalrmm` `10.78.3.158`; native Tactical RMM (не контейнер) | Python **3.11.8**, Django **4.2.18**, Django REST Framework 3.15.2, Channels 4.2.0, uWSGI 2.0.28, nginx 1.26.3, PostgreSQL 15; версия самого Tactical RMM не хранится в доступном package metadata | PHP binary, PHP-служб и PHP-процессов нет; PHP2Shell не применима. |
 | `autodiscover.aurora-logistics.ru`, `mail.aurora-logistics.ru` → `85.114.6.214` | Открыт | nginx → Microsoft Exchange / IIS | Версия Exchange не снималась в этой проверке | Не PHP (Exchange/IIS); PHP2Shell не применима к этому пути. |
-| `cloud.aurora-logistics.ru` → `85.114.6.214` | Открыт | nginx → Synology Drive/DSM `10.78.7.10:5001` | Версия DSM/Drive не подтверждена: SSH-ключ не принят | Вендорский appliance; наличие и версия PHP не подтверждены. Нужна проверка обновлений DSM/Drive через разрешённый доступ. |
+| `cloud.aurora-logistics.ru` → `85.114.6.214` | Открыт; транспорт nginx → `10.78.7.10:5001` подтверждён доступным | nginx → Synology Drive/DSM на SPB-NAS1 (`RS3618xs`) | DSM **7.4.1-90080**, Synology Drive Server **4.0.3-27892** | Вендорский appliance; PHP runtime не классифицирован. Drive уже на текущей версии пакета; DSM следует обновить до `7.4.1-90080 Update 1`. |
 | `helpdesk.aurora-logistics.ru` → `85.114.6.214` | **Открыт** | nginx → локальный FastCGI → PHP-FPM; HESK | **HESK 3.4.6**, PHP `8.1.2-1ubuntu2.27` | **Затронут по версии:** Jammy-исправление обеих CVE — `8.1.2-1ubuntu2.28`. HTTPS-vhost не содержит source ACL. |
 | `helpdesk2.aurora-logistics.ru`, `hd.aurora-logistics.ru` → `85.114.6.214` | Имя `helpdesk2` не опубликовано в DNS; для HTTP обычный `/` закрыт ACL | Тот же HESK/PHP-FPM | HESK 3.4.6, PHP `8.1.2-1ubuntu2.27` | **Технический риск:** regex-location `~ \\.php$` не наследует ACL из `location /`; прямой запрос к PHP до исправления ACL нельзя считать гарантированно закрытым. |
 | `ksc.aurora-logistics.ru` → `85.114.6.214` (включая 8080) | Открыт | nginx → Kaspersky Security Center / IAM/Web Console `10.78.20.98` | Версия продукта не снималась; PHP runtime, пакетов и процессов нет | PHP не обнаружен; PHP2Shell не применима. |
@@ -72,6 +72,22 @@ location запрещает произвольный внешний IP. Это �
 Не включены как веб-ресурсы почтовые, VPN, SIP, FTP и UDP-публикации из
 таблицы внешней поверхности выше. `portal.aurora-logistics.local` и listener
 9088 тоже не включены: публичного DNAT на 9088 нет.
+
+## Сверка обновлений Synology (2026-10-22)
+
+| Полка | Текущее состояние (проверено на устройстве) | Актуальная доступная DSM | Решение |
+| --- | --- | --- | --- |
+| SPB-NAS1 / `RS3618xs`, `10.78.0.250` | DSM `7.4.1-90080`; Synology Drive Server `4.0.3-27892` | `7.4.1-90080 Update 1` (12.10.2026, security fixes) | **Обновить первой** в согласованное окно: это backend публичного `cloud`. Перезагрузка полки обязательна; downgrade DSM после перехода на 7.4.1 невозможен. Drive уже актуален. |
+| SPB-FILE / `RS2421RP+`, `10.78.2.210` | DSM `7.2.2-72806 Update 9`; Drive не установлен | `7.2.2-72806 Update 10` (12.10.2026, security fixes) | Обновить во второе окно. Перезагрузка обязательна; нужно заранее вывести/проверить зависимые NFS/iSCSI workload. |
+
+По [Synology-SA-26:13](https://www.synology.com/en-global/security/advisory/Synology_SA_26_13)
+критическое исправление требуется не ниже DSM `7.4-90075` или
+`7.2.2-72806 Update 9`; обе полки уже соответствуют этому минимуму. Новые
+Update 1 и Update 10 содержат дополнительные security fixes, поэтому это
+плановые security-обновления, а не аварийное устранение известной
+неприкрытой CVE. Официальная страница пакетов подтверждает, что
+`Synology Drive Server 4.0.3-27892` является текущей версией для обеих
+моделей.
 
 ## Веб-сервисы за публичным nginx
 
@@ -106,11 +122,11 @@ location запрещает произвольный внешний IP. Это �
 На самом nginx также есть слушатель TCP/9088 с FastCGI, но для него не найдено
 публичного DNAT на AL-OBIT; публичным он в этом срезе не считается.
 
-Для остальных reverse-proxy upstream PHP не обнаружен на edge. Это не является
-доказательством отсутствия PHP внутри соответствующих приложений или
-вендорских устройств; особенно отдельно должны быть подтверждены `cloud`
-(Synology), `directum`, `otpb`, а также upstream `10.78.3.158` для `api`,
-`mesh` и `rmm`.
+Для остальных reverse-proxy upstream PHP не обнаружен на edge. Tactical RMM
+(`api`, `mesh`, `rmm`) дополнительно проверен на конечной VM: это Python/Django,
+без PHP. Для вендорского `cloud` (Synology) PHP runtime отдельно не
+классифицирован; `directum` и `otpb` также требуют проверки прикладного ПО,
+если они когда-либо будут опубликованы без ACL.
 
 ## Приоритет и следующий шаг
 
@@ -124,9 +140,9 @@ location запрещает произвольный внешний IP. Это �
    установить подтверждённое вендором исправление: публичный `tc`/`tc0`
    проксирует запросы в PHP backend. Только по номеру нельзя исключить
    vendor backport.
-4. Отдельно проверить вендорские обновления Synology DSM/Drive, Ideco и
-   Tactical RMM, а также получить разрешённый доступ к их конечным узлам,
-   пока стек не подтверждён.
+4. В согласованное окно обновить SPB-NAS1 до DSM `7.4.1-90080 Update 1`, затем
+   SPB-FILE до DSM `7.2.2-72806 Update 10`; оба обновления перезагрузят NAS.
+   Отдельно проверить Ideco, пока его стек не подтверждён.
 5. Если Helpdesk должен быть внутренним, добавить ACL не только в `location /`,
    но и на уровень `server` либо в FastCGI `location`; это исключит прямой
    обход через запрос к `.php`.
