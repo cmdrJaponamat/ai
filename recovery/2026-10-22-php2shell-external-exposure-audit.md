@@ -58,7 +58,7 @@ location запрещает произвольный внешний IP. Это �
 | `helpdesk2.aurora-logistics.ru`, `hd.aurora-logistics.ru` → `85.114.6.214` | Имя `helpdesk2` не опубликовано в DNS; для HTTP обычный `/` закрыт ACL | Тот же HESK/PHP-FPM | HESK 3.4.6, PHP `8.1.2-1ubuntu2.27` | **Технический риск:** regex-location `~ \\.php$` не наследует ACL из `location /`; прямой запрос к PHP до исправления ACL нельзя считать гарантированно закрытым. |
 | `ksc.aurora-logistics.ru` → `85.114.6.214` (включая 8080) | Открыт | nginx → Kaspersky Security Center / IAM/Web Console `10.78.20.98` | Версия продукта не снималась; PHP runtime, пакетов и процессов нет | PHP не обнаружен; PHP2Shell не применима. |
 | `otpb.aurora-logistics.ru` → `85.114.6.214` | Открыт | nginx → Олимпокс `10.78.20.130:9001`, Windows Server 2019 | Версия Олимпокс не снималась | `C:\\php` и активные PHP-процессы не обнаружены через QEMU Guest Agent; окончательно исключить PHP без проверки ПО на госте нельзя. |
-| `tc.aurora-logistics.ru`, `tc0.aurora-logistics.ru` → `85.114.6.214` | **Открыт** | nginx → TrueConf `10.78.20.178`; внешний Apache proxy → локальный PHP-enabled backend | Встроенный PHP TrueConf **8.2.30** | **Требует подтверждения патча у TrueConf:** номер ниже upstream fixed `8.2.35`; reverse proxy не изолирует PHP, так как передаёт запросы на backend `127.0.0.1:8080`. Возможен vendor backport. |
+| `tc.aurora-logistics.ru`, `tc0.aurora-logistics.ru` → `85.114.6.214` | **Открыт** | nginx → TrueConf `10.78.20.178`; внешний Apache proxy → локальный PHP-enabled backend | TrueConf Server **5.5.3.1366**, встроенный PHP **8.2.30** | **Обновить:** официальный security release требует для ветки 5.5 минимум TrueConf Server **5.5.6**. Reverse proxy не изолирует PHP, так как передаёт запросы на backend `127.0.0.1:8080`. |
 | `directum.aurora-logistics.ru` → `85.114.6.214` | Закрыт ACL | nginx → Directum `10.78.21.30`, Windows | Не снималась | Не внешняя веб-точка; PHP на конечном хосте не проверялся. |
 | `it.aurora-logistics.ru` → `85.114.6.214` | Закрыт ACL | nginx → 1С `10.78.22.5`, Windows | Не снималась | Не внешняя веб-точка; PHP не проверялся. |
 | `kanban.aurora-logistics.ru` → `85.114.6.214` | Закрыт ACL | nginx → Planka Docker `10.78.3.4:3000` | **Planka 2.0.0-rc.4**, PostgreSQL 14 Alpine | PHP runtime/служб/процессов нет. |
@@ -136,10 +136,11 @@ Update 1 и Update 10 содержат дополнительные security fix
 2. После обновления обязательно перезапустить `php8.1-fpm`; затем проверить
    версии пакетов и состояние пулов `www`/`zabbix`. На `10.78.3.251` обновить
    PHP в рамках обычного внутреннего vulnerability management.
-3. Срочно сверить advisory/пакет TrueConf для встроенного PHP 8.2.30 и
-   установить подтверждённое вендором исправление: публичный `tc`/`tc0`
-   проксирует запросы в PHP backend. Только по номеру нельзя исключить
-   vendor backport.
+3. Срочно обновить TrueConf Server на `10.78.20.178` с `5.5.3.1366` до
+   `5.5.6` или новее по официальной инструкции вендора: публичный `tc`/`tc0`
+   проксирует запросы в PHP backend. Перед обновлением создать резервную
+   копию; для 5.5.6 вендор требует свободное место не менее трёх размеров
+   текущего system database.
 4. В согласованное окно обновить SPB-NAS1 до DSM `7.4.1-90080 Update 1`, затем
    SPB-FILE до DSM `7.2.2-72806 Update 10`; оба обновления перезагрузят NAS.
    Отдельно проверить Ideco, пока его стек не подтверждён.
