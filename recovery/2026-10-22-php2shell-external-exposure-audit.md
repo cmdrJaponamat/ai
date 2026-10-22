@@ -48,12 +48,27 @@ INPUT-правилами и поэтому включены в реестр.
 `kanban`, `ksc`, `mail`, `mesh`, `otpb`, `rmm`, `tc`, `tc0`, `wiki` и
 `zabbix` в зоне `aurora-logistics.ru`.
 
-Наличие PHP доказано только для следующих опубликованных путей:
+В конфигурации nginx нужно различать наличие общего публичного DNAT и ACL
+конкретного виртуального хоста. Следующие приложения имеют HTTPS/HTTP vhost
+без `allow`/`deny` по источнику: `api`, `autodiscover`, `cloud`, `helpdesk`,
+`ksc` (включая 8080), `mail`, `mesh`, `otpb`, `rmm`, `tc` и `tc0`.
+
+Следующие приложения не отдаются внешнему произвольному источнику:
+
+| Имя | Фактическое ограничение |
+| --- | --- |
+| `zabbix.aurora-logistics.ru` | В рабочем `location /` подключён `/etc/nginx/allowed-subnets.conf`: разрешены только `10.0.0.0/8` и `192.168.0.0/16`, затем `deny all`. Внешний доступ не подтверждён. |
+| `directum.aurora-logistics.ru`, `it.aurora-logistics.ru`, `kanban.aurora-logistics.ru` | Рабочий `location /` подключает тот же `allowed-subnets.conf`; публичный HTTP-redirect/ACME не означает доступа к приложению. |
+| `wiki.aurora-logistics.ru` | HTTPS `location /` содержит явный allow-list и `deny all`; неограниченными остаются только HTTP-редиректы. |
+| `portal.aurora-logistics.local` и FastCGI listener 9088 | ACL есть, а публичный DNAT на 9088 не найден. |
+
+Наличие PHP доказано для следующих путей:
 
 | Публичное имя | Цепочка | PHP и статус CVE-2026-109618/109619 |
 | --- | --- | --- |
-| `helpdesk.aurora-logistics.ru`, `helpdesk2.aurora-logistics.ru`, `hd.aurora-logistics.ru` | edge `85.114.6.214:443` → nginx `10.78.3.1` → FastCGI Unix socket → `/var/www/helpdesk.aurora-logistics.ru/html` | **Затронуто:** активен `php8.1-fpm 8.1.2-1ubuntu2.27`; для Jammy исправление начинается с `8.1.2-1ubuntu2.28`. |
-| `zabbix.aurora-logistics.ru` | edge → nginx `10.78.3.1` → reverse proxy `10.78.3.251` → nginx/PHP-FPM pool `zabbix` | **Затронуто:** `php8.1-fpm 8.1.2-1ubuntu2.27`; исправление начинается с `8.1.2-1ubuntu2.28`. Zabbix frontend: `6.0.40`. |
+| `helpdesk.aurora-logistics.ru` | edge `85.114.6.214:443` → nginx `10.78.3.1` → FastCGI Unix socket → `/var/www/helpdesk.aurora-logistics.ru/html` | **Внешний и затронутый:** HTTPS-vhost не содержит source ACL; активен `php8.1-fpm 8.1.2-1ubuntu2.27`, для Jammy исправление начинается с `8.1.2-1ubuntu2.28`. |
+| `helpdesk2.aurora-logistics.ru` | HTTP → тот же FastCGI vhost | Главный `location /` ограничен подсетями, но regex-location `~ \\.php$` ACL не наследует. Прямой запрос к PHP-файлу следует считать потенциально внешним до исправления ACL на уровне `server` либо PHP-location. |
+| `zabbix.aurora-logistics.ru` | edge → nginx `10.78.3.1` → reverse proxy `10.78.3.251` → nginx/PHP-FPM pool `zabbix` | PHP `8.1.2-1ubuntu2.27` требует обновления, но frontend ограничен private ACL и **не включён в перечень внешних PHP-точек**. Zabbix frontend: `6.0.40`. |
 
 На самом nginx также есть слушатель TCP/9088 с FastCGI, но для него не найдено
 публичного DNAT на AL-OBIT; публичным он в этом срезе не считается.
@@ -66,13 +81,18 @@ INPUT-правилами и поэтому включены в реестр.
 
 ## Приоритет и следующий шаг
 
-1. В первую очередь обновить на `10.78.3.1` и `10.78.3.251` все пакеты
-   PHP 8.1 до `8.1.2-1ubuntu2.28` или новее из Jammy security/updates.
+1. В первую очередь обновить на `10.78.3.1` PHP 8.1 до `8.1.2-1ubuntu2.28`
+   или новее из Jammy security/updates; Helpdesk действительно доступен через
+   публичный HTTPS vhost без source ACL.
 2. После обновления обязательно перезапустить `php8.1-fpm`; затем проверить
-   версии пакетов и состояние пулов `www`/`zabbix`.
+   версии пакетов и состояние пулов `www`/`zabbix`. На `10.78.3.251` обновить
+   PHP в рамках обычного внутреннего vulnerability management.
 3. Отдельно проверить вендорские обновления Synology DSM/Drive и всех
    upstream, пока не подтверждён стек каждого сервиса.
-4. Так как PHP-точки были публичны до патча, после обновления провести
+4. Если Helpdesk должен быть внутренним, добавить ACL не только в `location /`,
+   но и на уровень `server` либо в FastCGI `location`; это исключит прямой
+   обход через запрос к `.php`.
+5. Так как Helpdesk был публичен до патча, после обновления провести
    проверку журналов и плановую ротацию секретов приложений согласно
    incident-процедуре.
 
