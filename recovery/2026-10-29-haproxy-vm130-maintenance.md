@@ -69,6 +69,32 @@ VLAN1100/DMZ; шлюз после включения сегмента — `10.78
 VM130 уже переведена в VLAN1100. Перед развёртыванием HAProxy-2 нужно отдельно
 настроить keepalived, DNS/NAT и выполнить проверку конфликтов для его IP и VIP.
 
+## Активная L4-конфигурация почтовых frontend
+
+Конфигурация `/etc/haproxy/haproxy.cfg` на VM130 развёрнута из версии,
+сохранённой в этом репозитории как `2026-10-29-haproxy-vm130.cfg`.
+
+- `10.78.10.4:443` читает только TLS ClientHello: SNI
+  `mail.aurora-logistics.ru` идёт напрямую на MX3/MX4; любой иной или
+  отсутствующий SNI — на nginx `10.78.3.1:443`.
+- `10.78.10.4:25`, `:587`, `:993` подготовлены к будущему cutover KSMG/NAT и
+  балансируются между MX3/MX4. Сейчас DNS, KSMG и NAT на эти frontend не
+  указывают.
+- TLS не завершается на HAProxy; `send-proxy` не используется ни к Exchange,
+  ни к nginx. У HAProxy настроен runtime socket
+  `/run/haproxy/admin.sock` для read-only операционного контроля.
+- HTTPS health check каждого MX выполняет TLS с mail-SNI и требует HTTP 200 от
+  `/mapi/healthcheck.htm`; SMTP/Submission используют SMTP check, IMAPS — TLS
+  check. По состоянию после reload: оба MX `UP/L7OK` на HTTPS и SMTP,
+  `UP/L6OK` на IMAPS; nginx `UP/L6OK`.
+
+Если health check обоих MX в одном backend станет отрицательным, новые
+соединения к соответствующему frontend не будут направлены на Exchange и
+закроются HAProxy. Уже установленные TCP-сессии живут до разрыва их текущего
+соединения. KSMG классифицирует невозможность подключения как временную
+ошибку и повторяет доставку из собственной очереди; keepalived при этом не
+переносит VIP, поскольку HAProxy-узел остаётся здоровым.
+
 ## План изменения
 
 1. Создать PVE snapshot VM130 перед обновлением.
@@ -84,6 +110,12 @@ VM130 уже переведена в VLAN1100. Перед развёртыван
 `10.78.10.1/27` и интерфейс `VLAN1100-DC-DMZ-PUBLISHED`. Это возвращает
 VM130 к `10.78.3.133` без изменения KSMG, Exchange и NAT. Для отката пакетов
 использовать более ранний снимок `pre-upgrade-20261029`.
+
+Для отката только mail frontend восстановить
+`/etc/haproxy/haproxy.cfg.pre-mail-frontends-20261029` (либо более позднюю
+копию `.pre-healthcheck-20261029`) как `/etc/haproxy/haproxy.cfg` и выполнить
+`systemctl reload haproxy`. Перед включением frontend создан отдельный снимок
+PVE `pre-mail-frontends-20261029`.
 
 ## Ожидаемое влияние
 
