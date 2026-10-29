@@ -122,3 +122,6 @@ root; пароль PFX на MX хранится локально, зашифро
 - Microsoft: сертификаты Exchange — https://learn.microsoft.com/en-us/exchange/architecture/client-access/certificates
 - Microsoft: импорт сертификата — https://learn.microsoft.com/en-us/exchange/architecture/client-access/import-certificates?view=exchserver-2019
 - Microsoft: выбор сертификата для inbound STARTTLS — https://learn.microsoft.com/en-us/exchange/mail-flow/mail-routing/inbound-starttls-certificates-selection
+
+Детальная ответственность компонентов и протокол автоматики:
+[`automation-design.md`](automation-design.md).
