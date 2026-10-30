@@ -23,7 +23,7 @@
 
 - 30.10.2026 10:13 MSK: `nginx -t` — успешно, `systemctl is-active nginx` — `active`.
 - Тест без учётных данных через этот виртуальный хост на `127.0.0.1` вернул ожидаемый HTTP 401 за 0,013 секунды: маршрут отвечает и требует авторизацию.
-- Требуется повторная попытка подключения в Outlook Mobile и просмотр новых записей ActiveSync. Исчезновение `Ping` timeout у iPhone можно подтвердить только после следующего долгого опроса.
+- Последующая попытка подключения и выводы приведены ниже. Исчезновение `Ping` timeout у iPhone можно подтвердить только после следующего долгого опроса.
 
 ## Результат повторной попытки и диагностика Exchange
 
@@ -33,4 +33,10 @@
 - Публичный Autodiscover V2 `Protocol=ActiveSync` для этого адреса возвращает HTTP 200 и корректный URL `https://mail.aurora-logistics.ru/Microsoft-Server-ActiveSync`.
 - Отдельная ошибка конфигурации: на обоих Exchange пустой `ExternalUrl` Autodiscover; запросы `Protocol=AutodiscoverV1` для других пользователей возвращают HTTP 500, а MX4 пишет MSExchange Autodiscover Event ID 1 (`GetHostNameFromVdir`). Для запроса `a.prudovskii` с `Protocol=ActiveSync` эта ошибка не наблюдалась. Исправление Autodiscover требует отдельного изменения.
 - На MX4 также есть Event ID 4999 для `MSExchangeSyncAppPool` с `EntityContentProperty.get_MIMEData`; прямой связи с сеансом `a.prudovskii` в доступных записях нет.
-- Следующий шаг по ошибке приложения: получить диагностику самой попытки регистрации Outlook Mobile или проверить способ ручного добавления Exchange-учётной записи. Серверная синхронизация существующего Outlook-партнёрства работает.
+- На этом этапе было решено проверить ручной ввод домена при добавлении Exchange-учётной записи.
+
+## Итог 30.10.2026 10:28 МСК
+
+- Пользователь подтвердил успешное добавление ящика в Outlook Mobile после замены домена в отдельном поле приложения: вместо DNS-имени AD `aurora-logistics.local` указано короткое имя `AURORA-LOGISTIC`; имя пользователя — `a.prudovskii`.
+- `Get-MobileDeviceStatistics` на MX4 подтвердил новое устройство Outlook `522b742ce9584d07b1f259d7c49e2f48`: `FirstSyncTime=30.10.2026 07:27:14 UTC`, `LastSuccessSync=07:28:13 UTC`, `DeviceAccessState=Allowed`, `Status=DeviceOk`.
+- Причина ошибки добавления — неверный формат значения поля «Домен» в приложении. Повышение тайм-аута nginx её не исправляло; оно оставлено для отдельно обнаруженных обрывов долгих `Ping` у iPhone. Ошибки Autodiscover V1 остаются отдельной задачей.
