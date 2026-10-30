@@ -24,3 +24,13 @@
 - 30.10.2026 10:13 MSK: `nginx -t` — успешно, `systemctl is-active nginx` — `active`.
 - Тест без учётных данных через этот виртуальный хост на `127.0.0.1` вернул ожидаемый HTTP 401 за 0,013 секунды: маршрут отвечает и требует авторизацию.
 - Требуется повторная попытка подключения в Outlook Mobile и просмотр новых записей ActiveSync. Исчезновение `Ping` timeout у iPhone можно подтвердить только после следующего долгого опроса.
+
+## Результат повторной попытки и диагностика Exchange
+
+- Пользователь повторил добавление ящика в Outlook Mobile: сообщение об ошибке проверки подлинности осталось. Значит, повышение тайм-аута не устранило эту ошибку.
+- 30.10.2026 около 10:14–10:20 МСК: на MX3 `HttpProxy/Eas` для Outlook DeviceId `a6b0ff1131284c838295df04c6740414` показал `Basic=true`, `AURORA-LOGISTIC\a.prudovskii`, маршрутизацию на MX4, HTTP 200. Начальные 401 сопровождались успешным повтором с учётными данными.
+- На MX4 backend IIS для того же устройства: `SC1:1` (успех протокола), `As:AllowedG`, `Throttle:0`, HTTP 200. `Get-MobileDeviceStatistics`: `DeviceOk`, `Allowed`, `LastSuccessSync=30.10.2026 07:20:58 UTC`. Первое подключение данного партнёрства — 02.06.2025; отдельного нового устройства после попытки не появилось.
+- Публичный Autodiscover V2 `Protocol=ActiveSync` для этого адреса возвращает HTTP 200 и корректный URL `https://mail.aurora-logistics.ru/Microsoft-Server-ActiveSync`.
+- Отдельная ошибка конфигурации: на обоих Exchange пустой `ExternalUrl` Autodiscover; запросы `Protocol=AutodiscoverV1` для других пользователей возвращают HTTP 500, а MX4 пишет MSExchange Autodiscover Event ID 1 (`GetHostNameFromVdir`). Для запроса `a.prudovskii` с `Protocol=ActiveSync` эта ошибка не наблюдалась. Исправление Autodiscover требует отдельного изменения.
+- На MX4 также есть Event ID 4999 для `MSExchangeSyncAppPool` с `EntityContentProperty.get_MIMEData`; прямой связи с сеансом `a.prudovskii` в доступных записях нет.
+- Следующий шаг по ошибке приложения: получить диагностику самой попытки регистрации Outlook Mobile или проверить способ ручного добавления Exchange-учётной записи. Серверная синхронизация существующего Outlook-партнёрства работает.
