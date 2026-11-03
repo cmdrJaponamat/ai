@@ -27,6 +27,10 @@
    ключей и паролей в нём нет. Его единственное изменение — локальный файл
    отчёта:
 
+   На текущем пилоте `WS-TEST-DEV-VPN` вызывает этот же файл из общей папки
+   `\\aurora-logistics.local\SYSVOL\aurora-logistics.local\scripts`.
+   Пользовательский диск `S:` в пути скрипта не подходит для запуска от `SYSTEM`.
+
 ```bat
 @echo off
 setlocal
@@ -36,7 +40,7 @@ if not exist "%OUT%" mkdir "%OUT%"
   echo START=%DATE% %TIME%
   echo COMPUTER=%COMPUTERNAME%
   whoami
-  ipconfig ^| findstr /C:"10.253.91."
+  ipconfig
   nltest /dsgetsite
   nltest /dsgetdc:aurora-logistics.local /force
   powershell.exe -NoProfile -Command "Test-Path '\\spb-dc1-al.aurora-logistics.local\SYSVOL'"
@@ -81,7 +85,7 @@ $boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 $boot
 Get-Item 'C:\ProgramData\Aurora\VpnPilot\startup.txt' -ErrorAction SilentlyContinue |
     Select-Object LastWriteTime, Length
-Get-Content 'C:\ProgramData\Aurora\VpnPilot\startup.txt' -ErrorAction SilentlyContinue
+Get-Content 'C:\ProgramData\Aurora\VpnPilot\startup.txt' -Encoding OEM -ErrorAction SilentlyContinue
 Get-Service OpenVPNService | Select-Object Name, Status, StartType
 Get-NetIPAddress -AddressFamily IPv4 |
     Where-Object IPAddress -like '10.253.91.*' |
