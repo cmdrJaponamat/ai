@@ -5,19 +5,52 @@
 
 ## 1. Подготовить проверяемое изменение
 
-- На пилотной OU включить компьютерные политики `Always wait for the network at
-  computer startup and logon` и `Startup policy processing wait time`.
-  Начать с 60 секунд, затем выбрать время по журналу фактического подключения.
-  В доступных отчётах семи включённых GPO для `OU=TEST` эти настройки пока не
-  найдены; локальную политику самого клиента ещё не проверяли.
-- Изменить безвредный параметр **Computer Configuration** в пилотной GPO и
-  записать новое ожидаемое значение. Это позволит отличить применение новой
-  политики от ранее сохранённой локальной копии. Для проверки именно
-  foreground-расширений (например, startup script или установка MSI) нужна
-  отдельная канарейка этого типа и холодная загрузка.
-- Убедиться, что физическая сеть доступна до входа в Windows: Ethernet или
-  Wi-Fi-профиль уровня компьютера. Пользовательский Wi-Fi, который поднимается
-  только после входа, не обеспечит соединение VPN до логина.
+1. На DC1 открыть `gpmc.msc`. В домене `aurora-logistics.local` создать GPO
+   `TEST-DeviceVPN-PreLogon` и связать с `OU=TEST`. В OU находятся **пять** ПК;
+   поэтому в **Scope → Security Filtering** оставить применение только для
+   компьютерного объекта `AL-TEST` (в диалоге выбора включить тип объектов
+   **Computers**). В **Delegation → Advanced** проверить у `AL-TEST$` права
+   `Read` и `Apply group policy`. Не привязывать тестовую GPO ко всему домену.
+2. В редакторе этой GPO включить:
+   - **Computer Configuration → Policies → Administrative Templates → System →
+     Logon → Always wait for the network at computer startup and logon**;
+   - **Computer Configuration → Policies → Administrative Templates → System →
+     Group Policy → Specify startup policy processing wait time** = 60 секунд.
+     По журналу подключения подобрать большее время при необходимости.
+   В отчётах семи ранее связанных GPO эти настройки не найдены; локальную
+   политику самого клиента ещё не проверяли.
+3. В **Computer Configuration → Policies → Windows Settings → Scripts
+   (Startup/Shutdown) → Startup** добавить тестовый `vpn-gpo-canary.cmd`.
+   Кнопка **Show Files** открывает папку этой GPO в SYSVOL; положить скрипт
+   туда. Его единственное изменение — локальный файл отчёта:
+
+```bat
+@echo off
+setlocal
+set "OUT=C:\ProgramData\Aurora\VpnPilot"
+if not exist "%OUT%" mkdir "%OUT%"
+(
+  echo START=%DATE% %TIME%
+  echo COMPUTER=%COMPUTERNAME%
+  whoami
+  ipconfig ^| findstr /C:"10.253.91."
+  nltest /dsgetsite
+  nltest /dsgetdc:aurora-logistics.local /force
+  powershell.exe -NoProfile -Command "Test-Path '\\spb-dc1-al.aurora-logistics.local\SYSVOL'"
+  echo END=%DATE% %TIME%
+) > "%OUT%\startup.txt" 2>&1
+```
+
+4. На включённом AL-TEST с уже работающим VPN один раз выполнить через RMM
+   `gpupdate /target:computer /force`, затем `gpresult /scope computer /r`.
+   Убедиться, что `TEST-DeviceVPN-PreLogon` пришла. Этот подготовительный
+   вызов нужен, чтобы настройки ожидания и startup script уже были локально
+   известны **до** проверяемой загрузки. Его результат не засчитывается как
+   доказательство pre-logon обработки.
+5. Убедиться, что физическая сеть доступна до входа в Windows: Ethernet или
+   сохранённый Wi-Fi-профиль для всего компьютера без captive portal.
+   Пользовательский Wi-Fi, который поднимается только после входа, не
+   обеспечит соединение VPN до логина.
 
 ## 2. Холодная загрузка без входа пользователя
 
@@ -25,12 +58,27 @@
 2. На `spb-vpn-srv` убедиться, что `AL-TEST.aurora-logistics.local` появился в
    `/var/log/openvpn-status/openvpn-device-status.log` с адресом
    `10.253.91.x` **до** входа пользователя. В журнале OpenVPN проверить время
-   `PUSH_REPLY` и отсутствие TLS/CRL-ошибок.
+   `PUSH_REPLY` и отсутствие TLS/CRL-ошибок. Подключиться по SSH к
+   `a.kuznetsov@10.78.4.253` и выполнить:
+
+```bash
+sudo systemctl is-active openvpn@server-device
+sudo head -15 /var/log/openvpn-status/openvpn-device-status.log
+sudo grep -F 'AL-TEST.aurora-logistics.local' /var/log/openvpn-device.log | tail -15
+sudo iptables -nvL INPUT
+sudo iptables -nvL FORWARD
+```
+
+   У правил для нового пула должны увеличиваться счётчики DNS и DC; другие
+   назначения должны попадать в `DROP`.
 3. Через RMM, запущенный от `SYSTEM`, проверить на ПК:
 
 ```powershell
 $boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 $boot
+Get-Item 'C:\ProgramData\Aurora\VpnPilot\startup.txt' -ErrorAction SilentlyContinue |
+    Select-Object LastWriteTime, Length
+Get-Content 'C:\ProgramData\Aurora\VpnPilot\startup.txt' -ErrorAction SilentlyContinue
 Get-Service OpenVPNService | Select-Object Name, Status, StartType
 Get-NetIPAddress -AddressFamily IPv4 |
     Where-Object IPAddress -like '10.253.91.*' |
@@ -50,8 +98,10 @@ Get-WinEvent -FilterHashtable @{
     Select-Object -First 30 TimeCreated, Id, LevelDisplayName, Message
 ```
 
-Сравнить время подключения OpenVPN, обнаружения DC и обработки **нового**
-значения пилотной GPO. `gpupdate /force` после входа пользователя не доказывает
+Файл `startup.txt` должен иметь дату **после** `$boot`, содержать
+`NT AUTHORITY\SYSTEM`, адрес `10.253.91.x`, `SITE-SPB-DC`, доступный DC и
+`True` для SYSVOL. Сравнить время его `START` с подключением OpenVPN и
+событиями GroupPolicy. `gpupdate /force` после входа пользователя не доказывает
 обработку политики при загрузке. Если туннель поднимается после стартовой
 обработки, нужен отдельный повторный запуск компьютерной политики после
 проверки DC/SYSVOL; расширения, которым нужен синхронный старт, проверить на
@@ -59,10 +109,11 @@ Get-WinEvent -FilterHashtable @{
 
 ## 3. Проверить AD и сертификат
 
-- На DC1 `nltest /dsaddresstosite:10.253.91.X` должен вернуть `SITE-SPB-DC` и
-  точную сеть `10.253.91.0/24`. `Get-ADReplicationSubnet` должен показывать
-  этот Site. На DC2 соответствие уже подтверждено командой
-  `nltest /server:DC2 /dsaddresstosite:10.253.91.3`.
+- На DC1 в PowerShell выполнить `Get-ADReplicationSubnet -Identity
+  '10.253.91.0/24' | Format-List Name,Site,Location`, затем
+  `nltest /dsaddresstosite:10.253.91.3` и
+  `nltest /server:DC2 /dsaddresstosite:10.253.91.3`. Оба DC уже возвращали
+  `SITE-SPB-DC` и точную сеть `10.253.91.0/24`.
 - На ПК проверить сертификат в `Cert:\LocalMachine\My`: CN компьютера,
   издатель `AL-ISSUING-CA`, EKU Client Authentication, срок действия и наличие
   закрытого ключа. Подключение OpenVPN подтверждает, что служба сейчас может
@@ -88,3 +139,10 @@ Get-WinEvent -FilterHashtable @{
 загрузке; повторная загрузка и продление/отзыв сертификата проверены. Затем
 повторить на нескольких ПК из разных домашних сетей и проверить загрузку без
 Интернета: ожидание сети должно заканчиваться, не блокируя ПК бесконечно.
+
+Если VPN не появился до входа, проверять физическую сеть, `OpenVPNService`,
+профиль `config-auto\device.ovpn`, лог `device.log`, сертификат и ACL ключа.
+Если VPN есть, но startup-файл отсутствует, проверять доступ к DC/SYSVOL,
+время установки туннеля относительно GroupPolicy/Operational и фильтрацию
+пилотной GPO. Если файл есть, но `nltest`/SYSVOL в нём неуспешны, проверять
+маршруты, DNS и правила сервера/AL-OBIT.
