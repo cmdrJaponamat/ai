@@ -17,7 +17,7 @@
 
 `10.10.20.51` исключён из DHCP-пула `AL-MMK`; до присвоения повторно проверить отсутствие статического узла с этим адресом. `192.168.203.0/24` принадлежит `SITE-SPB-MILLION`, а `10.10.0.0/16` — `SITE-MMK`. Пять FSMO-ролей находятся на `SPB-DC1-AL`. Новый AD Site создавать не нужно.
 
-## 1. Пока сервер в СПб — подготовить, но не повышать до DC
+## 1. Пока сервер в СПб — подготовить и при готовности повысить до DC
 
 На локальной консоли открыть 64-разрядный Windows PowerShell **от администратора**. Проверить систему, сеть, диски и время:
 
@@ -57,7 +57,23 @@ Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
 Get-WindowsFeature AD-Domain-Services,DNS,Print-Server
 ```
 
-На текущем адресе ожидается `SITE-SPB-MILLION`. **Не** задавать `10.10.20.51`, не запускать `Install-ADDSDomainController` и не выводить `DC2`, пока сервер физически не окажется на Тарана. Подготовить проверенные драйверы принтеров и резервные копии установочных пакетов, но не публиковать очереди до проверки DC. Назначить статическую конфигурацию Мурманска только с локальной консоли после перевозки.
+На текущем адресе ожидается `SITE-SPB-MILLION`. `10.10.20.51` пока не задавать. Повышение до DC можно выполнить уже здесь, если проверены доступ к `SPB-DC1-AL` по требуемым портам AD, DNS, время, резервное копирование и здоровье существующих DC. В мастере повышения выбрать **«Добавить контроллер домена в существующий домен»**, DNS, GC и **текущий** сайт `SITE-SPB-MILLION`; источником репликации выбрать `SPB-DC1-AL`. В PowerShell эквивалент:
+
+```powershell
+$domainCredential = Get-Credential
+$dsrmPassword = Read-Host 'Новый пароль DSRM' -AsSecureString
+Install-ADDSDomainController `
+  -DomainName 'aurora-logistics.local' `
+  -SiteName 'SITE-SPB-MILLION' `
+  -ReplicationSourceDC 'SPB-DC1-AL.aurora-logistics.local' `
+  -InstallDns `
+  -Credential $domainCredential `
+  -SafeModeAdministratorPassword $dsrmPassword
+```
+
+До повышения проверить здоровье текущих DC по разделу 2. После перезагрузки проверить `Get-SmbShare SYSVOL,NETLOGON`, `repadmin /showrepl MMK-DC1-AL`, `repadmin /replsummary`, `dcdiag /s:MMK-DC1-AL /test:Advertising /test:SysVolCheck /test:DNS /q` и DNS SRV для `SITE-SPB-MILLION`. Убедиться, что новый DC реально обслуживает запросы в этом сайте: клиенты сайта могут начать выбирать его сразу после публикации SRV. До перевозки сохранить резервную копию System State и выполнять штатное выключение. Во время перевозки недоступность этого DC не должна приводить к отказу входа и политик на площадке СПб; проверить выбор другого DC до отключения.
+
+Пароль DSRM сохранить в утверждённом хранилище. Не использовать `-SkipPreChecks`. Проверенные драйверы и пакеты принтеров можно подготовить заранее; очереди публиковать после проверки печати на целевой площадке. Назначать адрес Мурманска только с локальной консоли после перевозки.
 
 ## 2. До повышения — контроль старого DC2
 
@@ -72,7 +88,7 @@ Get-WindowsFeature | Where-Object Installed | Select-Object Name,DisplayName
 
 На `AL-MMK` повторно проверить отсутствие активной DHCP-аренды и ARP MAC для `.51`; на Windows проверить отсутствие ответа и конфликтов адресов. Проверить межсетевой доступ к новому `.51` от `DC2`, `SPB-DC1-AL` и клиентов: DNS, Kerberos, LDAP, SMB, RPC и динамические порты репликации. Один лишь `ping` недостаточен.
 
-## 3. На Тарана — ввести второй DC на временном адресе
+## 3. На Тарана — ввести подготовленный DC на временном адресе
 
 На локальной консоли нового сервера установить **статически** `10.10.20.51/24`, шлюз `10.10.20.1`, DNS сначала `10.10.20.50`, затем `10.78.3.50`. Удалить старый `192.168.203.40` с сетевого интерфейса. Проверить:
 
@@ -85,7 +101,16 @@ Resolve-DnsName -Server 10.10.20.50 -Type SRV _ldap._tcp.dc._msdcs.aurora-logist
 w32tm /query /source
 ```
 
-Ожидаемый сайт — `SITE-MMK`. Если репликация старого DC2 или связь с ЦОД не проходит, повышение отложить. При нормальных проверках, в администраторском PowerShell:
+Для уже повышенного в СПб DC **переместить объект сервера** в `SITE-MMK` (консоль «Сайты и службы Active Directory» или команда ниже), затем перерегистрировать записи и проверить репликацию. Одной смены IP для переноса объекта DC между сайтами недостаточно.
+
+```powershell
+Move-ADDirectoryServer -Identity 'MMK-DC1-AL' -Site 'SITE-MMK'
+ipconfig /registerdns
+nltest /dsregdns
+repadmin /kcc MMK-DC1-AL
+```
+
+После репликации конфигурации проверить, что `Get-ADDomainController -Identity MMK-DC1-AL` показывает `SITE-MMK` и `.51`, а DNS-имя не возвращает прежний `192.168.203.40`. Проверить SRV нового сайта и убрать устаревшие записи старого сайта, если они остались. Если DC ещё не повышали, ожидать `SITE-MMK` по `nltest /dsgetsite`; при исправной репликации старого DC2 и связи с ЦОД выполнить повышение в администраторском PowerShell:
 
 ```powershell
 $domainCredential = Get-Credential
@@ -99,7 +124,7 @@ Install-ADDSDomainController `
   -SafeModeAdministratorPassword $dsrmPassword
 ```
 
-Пароль DSRM сохранить в утверждённом хранилище. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После перезагрузки проверить на новом DC:
+Пароль DSRM сохранить в утверждённом хранилище. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После ввода DC в `SITE-MMK` на `.51` проверить на новом сервере:
 
 ```powershell
 Get-ADDomainController -Identity MMK-DC1-AL | Select-Object HostName,IPv4Address,Site,IsGlobalCatalog,IsReadOnly
