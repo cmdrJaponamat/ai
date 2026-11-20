@@ -102,17 +102,15 @@ w32tm /query /source
 
 ```powershell
 $domainCredential = Get-Credential
-$dsrmPassword = Read-Host 'Новый пароль DSRM' -AsSecureString
 Install-ADDSDomainController `
   -DomainName 'aurora-logistics.local' `
   -SiteName 'SITE-MMK' `
   -ReplicationSourceDC 'DC2.aurora-logistics.local' `
   -InstallDns `
-  -Credential $domainCredential `
-  -SafeModeAdministratorPassword $dsrmPassword
+  -Credential $domainCredential
 ```
 
-Пароль DSRM сохранить в утверждённом хранилище. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После перезагрузки снова подключиться удалённо и проверить на новом сервере:
+Команда сама запросит новый пароль DSRM (Directory Services Restore Mode) и его подтверждение. Это отдельный пароль локального восстановления данного DC, не пароль доменной учётной записи. Сохранить его в утверждённом хранилище. Ввод через одиночный `Read-Host -AsSecureString` из предыдущей версии инструкции не проверял повторение пароля; он заменён штатным запросом cmdlet. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После перезагрузки снова подключиться удалённо и проверить на новом сервере:
 
 ```powershell
 Get-ADDomainController -Identity MMK-DC1-AL | Select-Object HostName,IPv4Address,Site,IsGlobalCatalog,IsReadOnly
