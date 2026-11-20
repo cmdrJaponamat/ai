@@ -101,7 +101,7 @@ w32tm /query /source
 Ожидаемый сайт по `nltest /dsgetsite` — `SITE-MMK`; DNS-имя должно возвращать `.51`. Если осталась A-запись `192.168.203.40`, удалить её до повышения. Проверить здоровье и резервную копию старого `DC2` по разделу 2. При исправной репликации и доступе к доменным DNS повысить сервер через RMM/удалённую консоль или Server Manager с административной станции. Указать `SITE-MMK`, DNS, GC и источник репликации `DC2`. В администраторском PowerShell на новом сервере:
 
 ```powershell
-$domainCredential = Get-Credential
+$domainCredential = Get-Credential -UserName 'AURORA-LOGISTIC\admin-al' -Message 'Доменная учётная запись для повышения DC'
 Install-ADDSDomainController `
   -DomainName 'aurora-logistics.local' `
   -SiteName 'SITE-MMK' `
@@ -110,7 +110,7 @@ Install-ADDSDomainController `
   -Credential $domainCredential
 ```
 
-Команда сама запросит новый пароль DSRM (Directory Services Restore Mode) и его подтверждение. Это отдельный пароль локального восстановления данного DC, не пароль доменной учётной записи. Сохранить его в утверждённом хранилище. Ввод через одиночный `Read-Host -AsSecureString` из предыдущей версии инструкции не проверял повторение пароля; он заменён штатным запросом cmdlet. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После перезагрузки снова подключиться удалённо и проверить на новом сервере:
+В окне `Get-Credential` проверить, что имя учётной записи содержит домен: `AURORA-LOGISTIC\admin-al`. Для другой уполномоченной учётной записи также использовать формат `ДОМЕН\пользователь`, а не только короткое имя. Команда сама запросит новый пароль DSRM (Directory Services Restore Mode) и его подтверждение. Это отдельный пароль локального восстановления данного DC, не пароль доменной учётной записи. Сохранить его в утверждённом хранилище. Ввод через одиночный `Read-Host -AsSecureString` из предыдущей версии инструкции не проверял повторение пароля; он заменён штатным запросом cmdlet. Не использовать `-SkipPreChecks` и не отключать автоматический reboot после успешного повышения. После перезагрузки снова подключиться удалённо и проверить на новом сервере:
 
 ```powershell
 Get-ADDomainController -Identity MMK-DC1-AL | Select-Object HostName,IPv4Address,Site,IsGlobalCatalog,IsReadOnly
